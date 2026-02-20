@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "pronunciation-assessment": {
+      "url": "https://pronunciation-assessment--fabiosuizu.run.tools/mcp",
+      "transport": "streamable-http",
+      "description": "Pronunciation Assessment API — score pronunciation accuracy at word and phoneme level",
+      "config": {
+        "apiKey": "YOUR_API_KEY_HERE"
+      }
+    }
+  }
+}
