@@ -14,9 +14,9 @@ Production-ready examples for integrating **Brainiall Speech AI APIs** into your
 |-----|-----------|--------------|
 | **Pronunciation Assessment** | 17 MB | Scores pronunciation accuracy at word and phoneme level |
 | **Speech-to-Text (STT)** | 17 MB (shared) | Transcribes audio with word-level timestamps and confidence |
-| **Text-to-Speech (TTS)** | 115 MB | Generates natural speech from text, 12 English voices (Kokoro-82M) |
+| **Text-to-Speech (TTS)** | 115 MB | Generates natural speech from text, 12 English voices (#1 TTS Arena) |
 
-All three models combined weigh under **150 MB** and run on CPU. No GPU required. STT and Pronunciation share the same 17MB Conformer-CTC model.
+All three models combined weigh under **150 MB** and run on CPU. No GPU required. STT and Pronunciation share the same compact 17MB model.
 
 ## Quick Start
 
