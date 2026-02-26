@@ -119,6 +119,162 @@ print(f"Audio duration: {response.headers.get('X-Audio-Duration-Ms')}ms")
 print(f"Voice used: {response.headers.get('X-Voice')}")
 ```
 
+### Python: Async TTS with httpx
+
+```python
+import httpx
+import asyncio
+from pathlib import Path
+
+API_KEY = "YOUR_KEY"
+BASE_URL = "https://apim-ai-apis.azure-api.net/v1/tts"
+
+async def synthesize_async(
+    text: str,
+    voice: str = "af_heart",
+    speed: float = 1.0,
+    client: httpx.AsyncClient | None = None,
+) -> bytes:
+    """Async text-to-speech synthesis."""
+    _client = client or httpx.AsyncClient(timeout=30.0)
+    try:
+        response = await _client.post(
+            f"{BASE_URL}/synthesize",
+            headers={"Ocp-Apim-Subscription-Key": API_KEY},
+            json={"text": text, "voice": voice, "speed": speed},
+        )
+        response.raise_for_status()
+        return response.content
+    finally:
+        if client is None:
+            await _client.aclose()
+
+async def batch_synthesize(items: list[dict], output_dir: str = "audio") -> list[str]:
+    """Synthesize multiple texts concurrently. Returns list of file paths."""
+    Path(output_dir).mkdir(exist_ok=True)
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        tasks = [
+            synthesize_async(
+                item["text"],
+                item.get("voice", "af_heart"),
+                item.get("speed", 1.0),
+                client=client,
+            )
+            for item in items
+        ]
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+
+    paths = []
+    for i, result in enumerate(results):
+        if isinstance(result, Exception):
+            print(f"Error on item {i}: {result}")
+            continue
+        path = f"{output_dir}/audio_{i:03d}.wav"
+        Path(path).write_bytes(result)
+        paths.append(path)
+    return paths
+
+# Usage
+async def main():
+    items = [
+        {"text": "Welcome to our platform.", "voice": "af_heart"},
+        {"text": "Let's get started with the tutorial.", "voice": "bf_emma"},
+        {"text": "Thank you for watching.", "voice": "am_michael", "speed": 0.9},
+    ]
+    paths = await batch_synthesize(items)
+    print(f"Generated {len(paths)} audio files")
+
+asyncio.run(main())
+```
+
+### Python: TTS with Error Handling and Retry
+
+```python
+import requests
+import time
+from pathlib import Path
+
+class BrainiallTTS:
+    """Production TTS client with retry logic and error handling."""
+
+    def __init__(self, api_key: str, max_retries: int = 3, timeout: float = 30.0):
+        self.base_url = "https://apim-ai-apis.azure-api.net/v1/tts"
+        self.headers = {"Ocp-Apim-Subscription-Key": api_key}
+        self.max_retries = max_retries
+        self.timeout = timeout
+        self._voices_cache = None
+
+    def synthesize(
+        self,
+        text: str,
+        voice: str = "af_heart",
+        speed: float = 1.0,
+    ) -> dict:
+        """Synthesize text and return audio bytes with metadata."""
+        if not text or len(text) > 5000:
+            raise ValueError(f"Text must be 1-5000 chars, got {len(text or '')}")
+        if not 0.25 <= speed <= 4.0:
+            raise ValueError(f"Speed must be 0.25-4.0, got {speed}")
+
+        for attempt in range(self.max_retries):
+            try:
+                response = requests.post(
+                    f"{self.base_url}/synthesize",
+                    headers=self.headers,
+                    json={"text": text, "voice": voice, "speed": speed},
+                    timeout=self.timeout,
+                )
+                response.raise_for_status()
+                return {
+                    "audio": response.content,
+                    "duration_ms": int(response.headers.get("X-Audio-Duration-Ms", 0)),
+                    "voice": response.headers.get("X-Voice", voice),
+                    "text_length": int(response.headers.get("X-Text-Length", len(text))),
+                }
+            except requests.exceptions.RequestException as e:
+                if attempt < self.max_retries - 1:
+                    wait = 2 ** attempt
+                    print(f"Retry {attempt + 1}/{self.max_retries} after {wait}s: {e}")
+                    time.sleep(wait)
+                else:
+                    raise
+
+    def get_voices(self, accent: str | None = None, gender: str | None = None) -> list[dict]:
+        """Get available voices, optionally filtered by accent or gender."""
+        if self._voices_cache is None:
+            response = requests.get(
+                f"{self.base_url}/voices",
+                headers=self.headers,
+                timeout=self.timeout,
+            )
+            response.raise_for_status()
+            self._voices_cache = response.json()["voices"]
+
+        voices = self._voices_cache
+        if accent:
+            voices = [v for v in voices if v["accent"] == accent]
+        if gender:
+            voices = [v for v in voices if v["gender"] == gender]
+        return voices
+
+    def save(self, text: str, filepath: str, voice: str = "af_heart", speed: float = 1.0):
+        """Synthesize and save to file in one call."""
+        result = self.synthesize(text, voice, speed)
+        Path(filepath).write_bytes(result["audio"])
+        return result
+
+# Usage
+tts = BrainiallTTS(api_key="YOUR_KEY")
+
+# Get British male voices
+british_males = tts.get_voices(accent="british", gender="male")
+print(f"British male voices: {[v['name'] for v in british_males]}")
+
+# Synthesize with auto-retry
+result = tts.save("The quick brown fox jumps over the lazy dog.", "output.wav")
+print(f"Duration: {result['duration_ms']}ms")
+```
+
 ### Python: List Available Voices
 
 ```python
@@ -212,37 +368,256 @@ for i, text in enumerate(sentences):
 print(f"\nGenerated {len(sentences)} audio files in {output_dir}/")
 ```
 
-### Python: TTS with OpenAI SDK (Compatible)
+### Python: Audiobook Chapter Generator
+
+```python
+import requests
+import re
+from pathlib import Path
+
+API_KEY = "YOUR_KEY"
+BASE_URL = "https://apim-ai-apis.azure-api.net/v1/tts"
+HEADERS = {"Ocp-Apim-Subscription-Key": API_KEY}
+
+def split_into_chunks(text: str, max_chars: int = 4500) -> list[str]:
+    """Split text into chunks at sentence boundaries, respecting max_chars."""
+    sentences = re.split(r'(?<=[.!?])\s+', text)
+    chunks = []
+    current = ""
+    for sentence in sentences:
+        if len(current) + len(sentence) + 1 > max_chars:
+            if current:
+                chunks.append(current.strip())
+            current = sentence
+        else:
+            current = f"{current} {sentence}" if current else sentence
+    if current:
+        chunks.append(current.strip())
+    return chunks
+
+def generate_audiobook_chapter(
+    text: str,
+    output_dir: str,
+    voice: str = "af_sarah",
+    speed: float = 0.95,
+) -> list[str]:
+    """Generate audiobook audio files from long text. Returns list of file paths."""
+    Path(output_dir).mkdir(parents=True, exist_ok=True)
+    chunks = split_into_chunks(text)
+    paths = []
+    total_duration_ms = 0
+
+    for i, chunk in enumerate(chunks):
+        response = requests.post(
+            f"{BASE_URL}/synthesize",
+            headers=HEADERS,
+            json={"text": chunk, "voice": voice, "speed": speed},
+        )
+        response.raise_for_status()
+
+        filepath = f"{output_dir}/part_{i+1:03d}.wav"
+        Path(filepath).write_bytes(response.content)
+        duration = int(response.headers.get("X-Audio-Duration-Ms", 0))
+        total_duration_ms += duration
+        paths.append(filepath)
+        print(f"  Part {i+1}/{len(chunks)}: {duration}ms ({len(chunk)} chars)")
+
+    print(f"\nTotal: {len(chunks)} parts, {total_duration_ms / 1000:.1f}s audio")
+    return paths
+
+# Usage
+chapter_text = """
+Once upon a time, in a land far away, there lived a wise old wizard.
+He spent his days studying ancient texts and brewing magical potions.
+One morning, a young traveler arrived at his doorstep seeking guidance.
+The wizard looked at the traveler and smiled knowingly.
+""".strip()
+
+paths = generate_audiobook_chapter(chapter_text, "audiobook/chapter_01", voice="bm_george")
+```
+
+### Python: FastAPI TTS Proxy Service
+
+```python
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel, Field
+import httpx
+
+app = FastAPI(title="TTS Proxy Service")
+
+BRAINIALL_KEY = "YOUR_KEY"
+TTS_URL = "https://apim-ai-apis.azure-api.net/v1/tts"
+
+class SynthesizeRequest(BaseModel):
+    text: str = Field(..., min_length=1, max_length=5000)
+    voice: str = Field(default="af_heart")
+    speed: float = Field(default=1.0, ge=0.25, le=4.0)
+
+@app.post("/api/tts/synthesize")
+async def synthesize(req: SynthesizeRequest):
+    """Proxy TTS synthesis with validation and caching headers."""
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        response = await client.post(
+            f"{TTS_URL}/synthesize",
+            headers={"Ocp-Apim-Subscription-Key": BRAINIALL_KEY},
+            json=req.model_dump(),
+        )
+    if response.status_code != 200:
+        raise HTTPException(status_code=response.status_code, detail="TTS synthesis failed")
+
+    from fastapi.responses import Response
+    return Response(
+        content=response.content,
+        media_type="audio/wav",
+        headers={
+            "X-Audio-Duration-Ms": response.headers.get("X-Audio-Duration-Ms", "0"),
+            "X-Voice": response.headers.get("X-Voice", req.voice),
+            "Cache-Control": "public, max-age=86400",
+        },
+    )
+
+@app.get("/api/tts/voices")
+async def list_voices():
+    """Get available TTS voices."""
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        response = await client.get(
+            f"{TTS_URL}/voices",
+            headers={"Ocp-Apim-Subscription-Key": BRAINIALL_KEY},
+        )
+    return response.json()
+```
+
+### Python: LLM + TTS Pipeline (Generate then Speak)
 
 ```python
 from openai import OpenAI
-
-# Brainiall is OpenAI-compatible for LLM, but TTS uses direct REST
-# Use the REST API for TTS synthesis
 import requests
+
+API_KEY = "YOUR_KEY"
 
 client = OpenAI(
     base_url="https://apim-ai-apis.azure-api.net/v1",
-    api_key="YOUR_KEY"
+    api_key=API_KEY
 )
 
-# First, generate text with the LLM
+# Step 1: Generate text with LLM
 response = client.chat.completions.create(
     model="claude-haiku-4-5",
     messages=[{"role": "user", "content": "Write a 2-sentence greeting for a podcast intro."}]
 )
 generated_text = response.choices[0].message.content
 
-# Then convert to speech
+# Step 2: Convert to speech
 tts_response = requests.post(
     "https://apim-ai-apis.azure-api.net/v1/tts/synthesize",
-    headers={"Ocp-Apim-Subscription-Key": "YOUR_KEY"},
+    headers={"Ocp-Apim-Subscription-Key": API_KEY},
     json={"text": generated_text, "voice": "am_michael", "speed": 1.0}
 )
 
 with open("podcast_intro.wav", "wb") as f:
     f.write(tts_response.content)
 print(f"Generated intro: {generated_text}")
+```
+
+### Python: LangChain TTS Tool Integration
+
+```python
+from langchain_core.tools import tool
+from langchain_brainiall import ChatBrainiall
+from langgraph.prebuilt import create_react_agent
+import requests
+import base64
+
+API_KEY = "YOUR_KEY"
+TTS_URL = "https://apim-ai-apis.azure-api.net/v1/tts"
+
+@tool
+def text_to_speech(text: str, voice: str = "af_heart", speed: float = 1.0) -> str:
+    """Convert text to speech audio. Returns base64-encoded WAV audio.
+    Available voices: af_heart (warm female), bf_emma (British female),
+    am_michael (professional male), bm_george (British male narrator).
+    Speed range: 0.25 (very slow) to 4.0 (very fast)."""
+    response = requests.post(
+        f"{TTS_URL}/synthesize",
+        headers={"Ocp-Apim-Subscription-Key": API_KEY},
+        json={"text": text, "voice": voice, "speed": speed},
+    )
+    response.raise_for_status()
+    audio_b64 = base64.b64encode(response.content).decode()
+    duration = response.headers.get("X-Audio-Duration-Ms", "?")
+    return f"Audio generated: {duration}ms, {len(response.content)} bytes. Base64: {audio_b64[:50]}..."
+
+@tool
+def list_tts_voices() -> str:
+    """List all available text-to-speech voices with their accents and genders."""
+    response = requests.get(
+        f"{TTS_URL}/voices",
+        headers={"Ocp-Apim-Subscription-Key": API_KEY},
+    )
+    voices = response.json()["voices"]
+    return "\n".join(f"{v['id']}: {v['name']} ({v['gender']}, {v['accent']})" for v in voices)
+
+# Create agent with TTS capabilities
+llm = ChatBrainiall(model="claude-sonnet-4-6", api_key=API_KEY)
+agent = create_react_agent(llm, [text_to_speech, list_tts_voices])
+
+result = agent.invoke({
+    "messages": [("human", "List available British voices, then synthesize 'Good morning' with the best male British voice")]
+})
+for msg in result["messages"]:
+    if msg.content:
+        print(f"{msg.type}: {msg.content[:200]}")
+```
+
+### Python: Notification System with TTS
+
+```python
+import requests
+from pathlib import Path
+from datetime import datetime
+
+API_KEY = "YOUR_KEY"
+TTS_URL = "https://apim-ai-apis.azure-api.net/v1/tts"
+HEADERS = {"Ocp-Apim-Subscription-Key": API_KEY}
+
+# Voice assignment by notification type
+NOTIFICATION_VOICES = {
+    "alert": {"voice": "am_adam", "speed": 1.1},      # Urgent, authoritative
+    "reminder": {"voice": "af_heart", "speed": 0.95},  # Warm, calm
+    "greeting": {"voice": "bf_emma", "speed": 1.0},    # Friendly, British
+    "news": {"voice": "bm_george", "speed": 1.05},     # Documentary style
+    "tutorial": {"voice": "af_nicole", "speed": 0.85},  # Clear, professional
+}
+
+def generate_notification(
+    message: str,
+    notification_type: str = "reminder",
+    output_dir: str = "notifications",
+) -> str:
+    """Generate a spoken notification audio file."""
+    config = NOTIFICATION_VOICES.get(notification_type, NOTIFICATION_VOICES["reminder"])
+    Path(output_dir).mkdir(exist_ok=True)
+
+    response = requests.post(
+        f"{TTS_URL}/synthesize",
+        headers=HEADERS,
+        json={"text": message, **config},
+    )
+    response.raise_for_status()
+
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filepath = f"{output_dir}/{notification_type}_{timestamp}.wav"
+    Path(filepath).write_bytes(response.content)
+
+    duration = response.headers.get("X-Audio-Duration-Ms", "?")
+    print(f"[{notification_type}] {duration}ms: {message[:60]}...")
+    return filepath
+
+# Usage
+generate_notification("Your meeting starts in 5 minutes.", "alert")
+generate_notification("Don't forget to review your weekly report.", "reminder")
+generate_notification("Good morning! Today's weather is sunny with a high of 72.", "greeting")
+generate_notification("The market closed up 1.2 percent today.", "news")
 ```
 
 ### JavaScript: Text-to-Speech
@@ -273,6 +648,55 @@ const audio = await synthesize("Hello from Brainiall TTS!", "bf_emma");
 // Save to file (Node.js)
 const fs = await import("fs");
 fs.writeFileSync("output.wav", audio);
+```
+
+### JavaScript: Express.js TTS Service
+
+```javascript
+import express from "express";
+
+const app = express();
+app.use(express.json());
+
+const API_KEY = process.env.BRAINIALL_API_KEY || "YOUR_KEY";
+const TTS_URL = "https://apim-ai-apis.azure-api.net/v1/tts";
+
+app.post("/api/speak", async (req, res) => {
+  const { text, voice = "af_heart", speed = 1.0 } = req.body;
+  if (!text || text.length > 5000) {
+    return res.status(400).json({ error: "Text required, max 5000 chars" });
+  }
+  try {
+    const response = await fetch(`${TTS_URL}/synthesize`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Ocp-Apim-Subscription-Key": API_KEY,
+      },
+      body: JSON.stringify({ text, voice, speed }),
+    });
+    if (!response.ok) throw new Error(`TTS failed: ${response.status}`);
+
+    const audioBuffer = await response.arrayBuffer();
+    res.set({
+      "Content-Type": "audio/wav",
+      "X-Audio-Duration-Ms": response.headers.get("X-Audio-Duration-Ms"),
+      "Cache-Control": "public, max-age=3600",
+    });
+    res.send(Buffer.from(audioBuffer));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get("/api/voices", async (req, res) => {
+  const response = await fetch(`${TTS_URL}/voices`, {
+    headers: { "Ocp-Apim-Subscription-Key": API_KEY },
+  });
+  res.json(await response.json());
+});
+
+app.listen(3000, () => console.log("TTS service on :3000"));
 ```
 
 ### JavaScript: List Voices and Synthesize
@@ -336,6 +760,221 @@ curl -X POST "$BASE/synthesize" \
 curl -s "$BASE/health" \
   -H "Ocp-Apim-Subscription-Key: $API_KEY" | python3 -m json.tool
 ```
+
+## Use Cases
+
+### Language Learning Platform
+
+Generate practice audio at slower speeds for students learning English pronunciation:
+
+```python
+import requests
+
+API_KEY = "YOUR_KEY"
+BASE_URL = "https://apim-ai-apis.azure-api.net/v1/tts"
+HEADERS = {"Ocp-Apim-Subscription-Key": API_KEY}
+
+LESSONS = {
+    "greetings": [
+        ("Hello, how are you?", "af_heart", 0.7),
+        ("Good morning, nice to meet you.", "bm_george", 0.7),
+        ("My name is Sarah. What is your name?", "af_sarah", 0.7),
+    ],
+    "directions": [
+        ("Turn left at the next intersection.", "am_adam", 0.8),
+        ("The restaurant is on the right side of the street.", "bf_emma", 0.8),
+        ("Go straight ahead for two blocks.", "bm_lewis", 0.8),
+    ],
+}
+
+for lesson_name, phrases in LESSONS.items():
+    for i, (text, voice, speed) in enumerate(phrases):
+        response = requests.post(
+            f"{BASE_URL}/synthesize",
+            headers=HEADERS,
+            json={"text": text, "voice": voice, "speed": speed},
+        )
+        filename = f"lessons/{lesson_name}_{i+1:02d}.wav"
+        with open(filename, "wb") as f:
+            f.write(response.content)
+        print(f"  {filename}: {text}")
+```
+
+### IVR / Phone System
+
+Generate consistent voice prompts for interactive voice response systems:
+
+```python
+import requests
+
+API_KEY = "YOUR_KEY"
+TTS_URL = "https://apim-ai-apis.azure-api.net/v1/tts"
+HEADERS = {"Ocp-Apim-Subscription-Key": API_KEY}
+
+IVR_PROMPTS = {
+    "welcome": "Thank you for calling. For English, press one. Para español, presione dos.",
+    "main_menu": "For sales, press one. For support, press two. For billing, press three. To speak with an operator, press zero.",
+    "hold": "Please hold. Your call is important to us. An agent will be with you shortly.",
+    "voicemail": "We're sorry, no one is available to take your call. Please leave a message after the tone.",
+    "hours": "Our office hours are Monday through Friday, 9 AM to 5 PM Eastern Time.",
+    "goodbye": "Thank you for calling. Have a great day. Goodbye.",
+}
+
+for name, text in IVR_PROMPTS.items():
+    response = requests.post(
+        f"{TTS_URL}/synthesize",
+        headers=HEADERS,
+        json={"text": text, "voice": "af_nicole", "speed": 0.95},
+    )
+    with open(f"ivr/{name}.wav", "wb") as f:
+        f.write(response.content)
+    print(f"  {name}.wav ({response.headers.get('X-Audio-Duration-Ms')}ms)")
+```
+
+### Accessibility / Screen Reader Alternative
+
+Convert web page content to spoken audio for visually impaired users:
+
+```python
+import requests
+
+API_KEY = "YOUR_KEY"
+TTS_URL = "https://apim-ai-apis.azure-api.net/v1/tts"
+HEADERS = {"Ocp-Apim-Subscription-Key": API_KEY}
+
+def text_to_audio(content: str, voice: str = "am_michael") -> bytes:
+    """Convert text content to audio for accessibility."""
+    response = requests.post(
+        f"{TTS_URL}/synthesize",
+        headers=HEADERS,
+        json={"text": content[:5000], "voice": voice, "speed": 0.9},
+    )
+    response.raise_for_status()
+    return response.content
+
+# Example: convert article sections to audio
+article = {
+    "title": "New Study Shows Benefits of Daily Exercise",
+    "summary": "Researchers at Stanford University found that just 30 minutes of daily exercise can reduce the risk of heart disease by up to 40 percent.",
+    "details": "The study tracked 10,000 participants over five years, measuring cardiovascular health markers quarterly.",
+}
+
+for section, text in article.items():
+    audio = text_to_audio(text)
+    with open(f"article_{section}.wav", "wb") as f:
+        f.write(audio)
+```
+
+## Migration Guides
+
+### Migrating from ElevenLabs
+
+ElevenLabs uses a different endpoint structure. Here is a side-by-side comparison:
+
+```python
+# BEFORE: ElevenLabs ($0.18/1K chars)
+import requests
+
+response = requests.post(
+    "https://api.elevenlabs.io/v1/text-to-speech/21m00Tcm4TlvDq8ikWAM",
+    headers={
+        "xi-api-key": "YOUR_ELEVEN_KEY",
+        "Content-Type": "application/json",
+    },
+    json={
+        "text": "Hello world",
+        "model_id": "eleven_turbo_v2_5",
+        "voice_settings": {"stability": 0.5, "similarity_boost": 0.75},
+    },
+)
+audio = response.content
+
+# AFTER: Brainiall ($0.01-0.03/1K chars) — 6-18x cheaper
+response = requests.post(
+    "https://apim-ai-apis.azure-api.net/v1/tts/synthesize",
+    headers={"Ocp-Apim-Subscription-Key": "YOUR_KEY"},
+    json={"text": "Hello world", "voice": "af_heart", "speed": 1.0},
+)
+audio = response.content
+```
+
+Key differences:
+- Brainiall uses a single endpoint for all voices (voice is a parameter, not URL path)
+- No separate model_id needed
+- Speed control instead of stability/similarity_boost
+- 6-18x lower cost per character
+- 12 voices (English only) vs ElevenLabs' custom voice cloning
+
+### Migrating from Google Cloud TTS
+
+```python
+# BEFORE: Google Cloud TTS ($0.004-0.016/1K chars)
+from google.cloud import texttospeech
+
+client = texttospeech.TextToSpeechClient()
+input_text = texttospeech.SynthesisInput(text="Hello world")
+voice = texttospeech.VoiceSelectionParams(
+    language_code="en-US",
+    ssml_gender=texttospeech.SsmlVoiceGender.FEMALE,
+)
+audio_config = texttospeech.AudioConfig(
+    audio_encoding=texttospeech.AudioEncoding.LINEAR16,
+    speaking_rate=1.0,
+)
+response = client.synthesize_speech(
+    input=input_text, voice=voice, audio_config=audio_config
+)
+audio = response.audio_content
+
+# AFTER: Brainiall ($0.01-0.03/1K chars)
+import requests
+
+response = requests.post(
+    "https://apim-ai-apis.azure-api.net/v1/tts/synthesize",
+    headers={"Ocp-Apim-Subscription-Key": "YOUR_KEY"},
+    json={"text": "Hello world", "voice": "af_heart", "speed": 1.0},
+)
+audio = response.content
+```
+
+Key differences:
+- No SDK installation or Google Cloud project setup required
+- Simple REST API vs client library
+- Direct WAV output (no audio encoding config)
+- Comparable pricing with simpler billing
+
+### Migrating from Amazon Polly
+
+```python
+# BEFORE: Amazon Polly ($0.004-0.016/1K chars)
+import boto3
+
+polly = boto3.client("polly", region_name="us-east-1")
+response = polly.synthesize_speech(
+    Text="Hello world",
+    OutputFormat="pcm",
+    VoiceId="Joanna",
+    Engine="neural",
+    SampleRate="24000",
+)
+audio = response["AudioStream"].read()
+
+# AFTER: Brainiall ($0.01-0.03/1K chars)
+import requests
+
+response = requests.post(
+    "https://apim-ai-apis.azure-api.net/v1/tts/synthesize",
+    headers={"Ocp-Apim-Subscription-Key": "YOUR_KEY"},
+    json={"text": "Hello world", "voice": "af_heart", "speed": 1.0},
+)
+audio = response.content
+```
+
+Key differences:
+- No AWS credentials or boto3 setup needed
+- Simple REST API vs AWS SDK
+- Single API key authentication
+- No region-specific endpoints
 
 ## MCP Server
 

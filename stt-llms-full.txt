@@ -162,6 +162,173 @@ for word in result["words"]:
     print(f"  [{word['start']:.2f}-{word['end']:.2f}] {word['word']} ({word['confidence']:.0%})")
 ```
 
+### Python: Async Transcription with httpx
+
+```python
+import httpx
+import asyncio
+import base64
+from pathlib import Path
+
+API_KEY = "YOUR_KEY"
+
+async def transcribe_async(
+    audio_path: str,
+    engine: str = "whisper",
+    language: str | None = None,
+    diarize: bool = False,
+    client: httpx.AsyncClient | None = None,
+) -> dict:
+    """Async transcription supporting both compact and whisper engines."""
+    audio_b64 = base64.b64encode(Path(audio_path).read_bytes()).decode()
+
+    if engine == "whisper":
+        url = "https://apim-ai-apis.azure-api.net/v1/whisper/transcribe/base64"
+        payload = {"audio": audio_b64, "diarize": diarize}
+        if language:
+            payload["language"] = language
+    else:
+        url = "https://apim-ai-apis.azure-api.net/v1/stt/transcribe/base64"
+        payload = {"audio": audio_b64, "include_timestamps": True}
+
+    _client = client or httpx.AsyncClient(timeout=60.0)
+    try:
+        response = await _client.post(
+            url,
+            headers={
+                "Ocp-Apim-Subscription-Key": API_KEY,
+                "Content-Type": "application/json",
+            },
+            json=payload,
+        )
+        response.raise_for_status()
+        return response.json()
+    finally:
+        if client is None:
+            await _client.aclose()
+
+async def batch_transcribe(audio_files: list[str], engine: str = "whisper") -> list[dict]:
+    """Transcribe multiple audio files concurrently."""
+    async with httpx.AsyncClient(timeout=120.0) as client:
+        tasks = [
+            transcribe_async(path, engine=engine, client=client)
+            for path in audio_files
+        ]
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+
+    output = []
+    for path, result in zip(audio_files, results):
+        if isinstance(result, Exception):
+            output.append({"file": path, "error": str(result)})
+        else:
+            output.append({"file": path, **result})
+    return output
+
+# Usage
+async def main():
+    files = ["audio1.wav", "audio2.wav", "audio3.wav"]
+    results = await batch_transcribe(files, engine="whisper")
+    for r in results:
+        if "error" in r:
+            print(f"  ERROR {r['file']}: {r['error']}")
+        else:
+            print(f"  {r['file']}: {r['text'][:80]}...")
+
+asyncio.run(main())
+```
+
+### Python: STT Client with Retry and Error Handling
+
+```python
+import requests
+import base64
+import time
+from pathlib import Path
+
+class BrainiallSTT:
+    """Production STT client with retry logic and automatic engine selection."""
+
+    def __init__(self, api_key: str, max_retries: int = 3, timeout: float = 60.0):
+        self.api_key = api_key
+        self.headers = {"Ocp-Apim-Subscription-Key": api_key, "Content-Type": "application/json"}
+        self.max_retries = max_retries
+        self.timeout = timeout
+
+    def transcribe(
+        self,
+        audio_path: str,
+        engine: str = "auto",
+        language: str | None = None,
+        diarize: bool = False,
+    ) -> dict:
+        """Transcribe audio file. Engine: 'compact', 'whisper', or 'auto' (auto-selects based on file size)."""
+        audio_bytes = Path(audio_path).read_bytes()
+
+        if engine == "auto":
+            # Use compact for small files (<500KB, likely short English), whisper for everything else
+            engine = "compact" if len(audio_bytes) < 500_000 and not diarize else "whisper"
+
+        audio_b64 = base64.b64encode(audio_bytes).decode()
+
+        if engine == "whisper":
+            url = "https://apim-ai-apis.azure-api.net/v1/whisper/transcribe/base64"
+            payload = {"audio": audio_b64, "diarize": diarize}
+            if language:
+                payload["language"] = language
+        else:
+            url = "https://apim-ai-apis.azure-api.net/v1/stt/transcribe/base64"
+            payload = {"audio": audio_b64, "include_timestamps": True}
+
+        for attempt in range(self.max_retries):
+            try:
+                response = requests.post(
+                    url, headers=self.headers, json=payload, timeout=self.timeout
+                )
+                response.raise_for_status()
+                result = response.json()
+                result["engine"] = engine
+                return result
+            except requests.exceptions.RequestException as e:
+                if attempt < self.max_retries - 1:
+                    wait = 2 ** attempt
+                    print(f"Retry {attempt + 1}/{self.max_retries} after {wait}s: {e}")
+                    time.sleep(wait)
+                else:
+                    raise
+
+    def transcribe_meeting(self, audio_path: str, language: str = "en") -> dict:
+        """Convenience method: transcribe meeting with speaker diarization."""
+        return self.transcribe(audio_path, engine="whisper", language=language, diarize=True)
+
+    def is_healthy(self, engine: str = "whisper") -> bool:
+        """Check if the STT service is healthy."""
+        url = f"https://apim-ai-apis.azure-api.net/v1/{'whisper' if engine == 'whisper' else 'stt'}/health"
+        try:
+            r = requests.get(url, headers=self.headers, timeout=5.0)
+            return r.status_code == 200
+        except Exception:
+            return False
+
+# Usage
+stt = BrainiallSTT(api_key="YOUR_KEY")
+
+# Auto-select engine
+result = stt.transcribe("short_command.wav")  # Uses compact (small file)
+print(f"Engine: {result['engine']}, Text: {result['text']}")
+
+result = stt.transcribe("long_podcast.mp3")  # Uses whisper (large file)
+print(f"Engine: {result['engine']}, Text: {result['text'][:100]}...")
+
+# Meeting transcription with speakers
+meeting = stt.transcribe_meeting("standup.wav")
+current_speaker = None
+for word in meeting.get("words", []):
+    if word.get("speaker") != current_speaker:
+        current_speaker = word.get("speaker")
+        print(f"\n[{current_speaker}]: ", end="")
+    print(word["word"], end=" ")
+```
+
 ### Python: Whisper Multilingual Transcription
 
 ```python
@@ -196,6 +363,225 @@ for word in result["words"]:
         current_speaker = word.get("speaker")
         print(f"\n[{current_speaker}]: ", end="")
     print(f"{word['word']} ", end="")
+```
+
+### Python: SRT Subtitle Generator
+
+```python
+import requests
+import base64
+
+API_KEY = "YOUR_KEY"
+HEADERS = {"Ocp-Apim-Subscription-Key": API_KEY, "Content-Type": "application/json"}
+
+def format_srt_time(seconds: float) -> str:
+    """Convert seconds to SRT time format HH:MM:SS,mmm."""
+    h = int(seconds // 3600)
+    m = int((seconds % 3600) // 60)
+    s = int(seconds % 60)
+    ms = int((seconds % 1) * 1000)
+    return f"{h:02d}:{m:02d}:{s:02d},{ms:03d}"
+
+def generate_srt(audio_path: str, max_words_per_line: int = 8) -> str:
+    """Generate SRT subtitle file from audio using Whisper."""
+    with open(audio_path, "rb") as f:
+        audio_b64 = base64.b64encode(f.read()).decode()
+
+    response = requests.post(
+        "https://apim-ai-apis.azure-api.net/v1/whisper/transcribe/base64",
+        headers=HEADERS,
+        json={"audio": audio_b64, "language": "en"},
+    )
+    result = response.json()
+    words = result.get("words", [])
+
+    srt_entries = []
+    entry_num = 1
+    i = 0
+    while i < len(words):
+        chunk = words[i : i + max_words_per_line]
+        start = chunk[0]["start"]
+        end = chunk[-1]["end"]
+        text = " ".join(w["word"] for w in chunk)
+
+        srt_entries.append(
+            f"{entry_num}\n{format_srt_time(start)} --> {format_srt_time(end)}\n{text}\n"
+        )
+        entry_num += 1
+        i += max_words_per_line
+
+    return "\n".join(srt_entries)
+
+# Usage
+srt_content = generate_srt("video_audio.wav", max_words_per_line=10)
+with open("subtitles.srt", "w") as f:
+    f.write(srt_content)
+print("Subtitles generated!")
+print(srt_content[:500])
+```
+
+### Python: Meeting Minutes Generator (STT + LLM)
+
+```python
+import requests
+import base64
+from openai import OpenAI
+
+API_KEY = "YOUR_KEY"
+
+# Step 1: Transcribe meeting with speaker diarization
+with open("meeting_recording.wav", "rb") as f:
+    audio_b64 = base64.b64encode(f.read()).decode()
+
+stt_response = requests.post(
+    "https://apim-ai-apis.azure-api.net/v1/whisper/transcribe/base64",
+    headers={"Ocp-Apim-Subscription-Key": API_KEY, "Content-Type": "application/json"},
+    json={"audio": audio_b64, "diarize": True, "language": "en"},
+)
+result = stt_response.json()
+
+# Format transcript with speakers
+transcript_lines = []
+current_speaker = None
+current_text = []
+for word in result.get("words", []):
+    speaker = word.get("speaker", "UNKNOWN")
+    if speaker != current_speaker:
+        if current_text:
+            transcript_lines.append(f"[{current_speaker}]: {' '.join(current_text)}")
+        current_speaker = speaker
+        current_text = [word["word"]]
+    else:
+        current_text.append(word["word"])
+if current_text:
+    transcript_lines.append(f"[{current_speaker}]: {' '.join(current_text)}")
+
+transcript = "\n".join(transcript_lines)
+
+# Step 2: Generate meeting minutes with LLM
+client = OpenAI(
+    base_url="https://apim-ai-apis.azure-api.net/v1",
+    api_key=API_KEY,
+)
+
+minutes = client.chat.completions.create(
+    model="claude-sonnet-4-6",
+    messages=[
+        {
+            "role": "system",
+            "content": "You are an expert meeting summarizer. Generate structured meeting minutes with: 1) Key Discussion Points, 2) Decisions Made, 3) Action Items (with owners if identifiable), 4) Next Steps.",
+        },
+        {"role": "user", "content": f"Generate meeting minutes from this transcript:\n\n{transcript}"},
+    ],
+)
+
+print("=== Meeting Minutes ===")
+print(minutes.choices[0].message.content)
+```
+
+### Python: FastAPI Transcription Service
+
+```python
+from fastapi import FastAPI, UploadFile, File, Query, HTTPException
+import httpx
+import base64
+
+app = FastAPI(title="Transcription Service")
+
+BRAINIALL_KEY = "YOUR_KEY"
+
+@app.post("/api/transcribe")
+async def transcribe(
+    audio: UploadFile = File(...),
+    engine: str = Query(default="auto", enum=["auto", "compact", "whisper"]),
+    language: str = Query(default=None),
+    diarize: bool = Query(default=False),
+):
+    """Transcribe uploaded audio file."""
+    content = await audio.read()
+    if len(content) > 50_000_000:
+        raise HTTPException(413, "File too large (max 50MB)")
+
+    audio_b64 = base64.b64encode(content).decode()
+
+    if engine == "auto":
+        engine = "compact" if len(content) < 500_000 and not diarize else "whisper"
+
+    if engine == "whisper":
+        url = "https://apim-ai-apis.azure-api.net/v1/whisper/transcribe/base64"
+        payload = {"audio": audio_b64, "diarize": diarize}
+        if language:
+            payload["language"] = language
+    else:
+        url = "https://apim-ai-apis.azure-api.net/v1/stt/transcribe/base64"
+        payload = {"audio": audio_b64, "include_timestamps": True}
+
+    async with httpx.AsyncClient(timeout=120.0) as client:
+        response = await client.post(
+            url,
+            headers={"Ocp-Apim-Subscription-Key": BRAINIALL_KEY, "Content-Type": "application/json"},
+            json=payload,
+        )
+
+    if response.status_code != 200:
+        raise HTTPException(response.status_code, f"Transcription failed: {response.text}")
+
+    result = response.json()
+    result["engine"] = engine
+    result["filename"] = audio.filename
+    return result
+```
+
+### Python: LangChain STT Tool
+
+```python
+from langchain_core.tools import tool
+from langchain_brainiall import ChatBrainiall
+from langgraph.prebuilt import create_react_agent
+import requests
+import base64
+
+API_KEY = "YOUR_KEY"
+
+@tool
+def transcribe_audio(audio_path: str, language: str = "en", diarize: bool = False) -> str:
+    """Transcribe an audio file to text using Whisper. Supports 99 languages.
+    Set diarize=True for meeting recordings to identify different speakers.
+    Returns the transcript text with optional speaker labels."""
+    with open(audio_path, "rb") as f:
+        audio_b64 = base64.b64encode(f.read()).decode()
+
+    response = requests.post(
+        "https://apim-ai-apis.azure-api.net/v1/whisper/transcribe/base64",
+        headers={"Ocp-Apim-Subscription-Key": API_KEY, "Content-Type": "application/json"},
+        json={"audio": audio_b64, "language": language, "diarize": diarize},
+    )
+    result = response.json()
+
+    if diarize and "words" in result:
+        lines = []
+        current_speaker = None
+        words = []
+        for w in result["words"]:
+            if w.get("speaker") != current_speaker:
+                if words:
+                    lines.append(f"[{current_speaker}]: {' '.join(words)}")
+                current_speaker = w.get("speaker")
+                words = [w["word"]]
+            else:
+                words.append(w["word"])
+        if words:
+            lines.append(f"[{current_speaker}]: {' '.join(words)}")
+        return "\n".join(lines)
+    return result.get("text", "")
+
+# Create agent with STT capability
+llm = ChatBrainiall(model="claude-sonnet-4-6", api_key=API_KEY)
+agent = create_react_agent(llm, [transcribe_audio])
+
+result = agent.invoke({
+    "messages": [("human", "Transcribe the meeting recording at meeting.wav with speaker identification")]
+})
 ```
 
 ### Python: Multipart File Upload (Whisper)
@@ -253,44 +639,6 @@ for item in results:
     print(f"  {item['file']}: {text[:80]}...")
 ```
 
-### Python: STT + LLM Pipeline (Transcribe then Analyze)
-
-```python
-import requests
-import base64
-from openai import OpenAI
-
-API_KEY = "YOUR_KEY"
-
-# Step 1: Transcribe audio with Whisper
-with open("customer_call.wav", "rb") as f:
-    audio_b64 = base64.b64encode(f.read()).decode()
-
-stt_response = requests.post(
-    "https://apim-ai-apis.azure-api.net/v1/whisper/transcribe/base64",
-    headers={"Ocp-Apim-Subscription-Key": API_KEY, "Content-Type": "application/json"},
-    json={"audio": audio_b64, "diarize": True}
-)
-transcript = stt_response.json()["text"]
-
-# Step 2: Analyze with LLM via the same API key
-client = OpenAI(
-    base_url="https://apim-ai-apis.azure-api.net/v1",
-    api_key=API_KEY
-)
-
-analysis = client.chat.completions.create(
-    model="claude-haiku-4-5",
-    messages=[
-        {"role": "system", "content": "Analyze this customer support call transcript. Extract: sentiment, key topics, action items."},
-        {"role": "user", "content": transcript}
-    ]
-)
-
-print(f"Transcript: {transcript[:200]}...")
-print(f"\nAnalysis:\n{analysis.choices[0].message.content}")
-```
-
 ### JavaScript: Whisper Transcription
 
 ```javascript
@@ -335,6 +683,54 @@ for (const word of meeting.words) {
 }
 ```
 
+### JavaScript: Express.js Transcription Service
+
+```javascript
+import express from "express";
+import multer from "multer";
+
+const app = express();
+const upload = multer({ limits: { fileSize: 50 * 1024 * 1024 } }); // 50MB
+
+const API_KEY = process.env.BRAINIALL_API_KEY || "YOUR_KEY";
+
+app.post("/api/transcribe", upload.single("audio"), async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: "No audio file" });
+
+  const audioBase64 = req.file.buffer.toString("base64");
+  const engine = req.body.engine || "whisper";
+  const diarize = req.body.diarize === "true";
+  const language = req.body.language;
+
+  const url =
+    engine === "compact"
+      ? "https://apim-ai-apis.azure-api.net/v1/stt/transcribe/base64"
+      : "https://apim-ai-apis.azure-api.net/v1/whisper/transcribe/base64";
+
+  const payload =
+    engine === "compact"
+      ? { audio: audioBase64, include_timestamps: true }
+      : { audio: audioBase64, diarize, ...(language && { language }) };
+
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Ocp-Apim-Subscription-Key": API_KEY,
+      },
+      body: JSON.stringify(payload),
+    });
+    const result = await response.json();
+    res.json({ engine, filename: req.file.originalname, ...result });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.listen(3001, () => console.log("STT service on :3001"));
+```
+
 ### curl: STT Examples
 
 ```bash
@@ -365,6 +761,177 @@ curl -X POST "https://apim-ai-apis.azure-api.net/v1/whisper/transcribe" \
 # Health check
 curl -s "https://apim-ai-apis.azure-api.net/v1/whisper/health" \
   -H "Ocp-Apim-Subscription-Key: $API_KEY" | python3 -m json.tool
+```
+
+## Use Cases
+
+### Call Center Analytics
+
+Transcribe customer support calls with speaker identification and analyze with LLM:
+
+```python
+import requests
+import base64
+from openai import OpenAI
+
+API_KEY = "YOUR_KEY"
+
+def analyze_support_call(audio_path: str) -> dict:
+    """Transcribe and analyze a customer support call."""
+    with open(audio_path, "rb") as f:
+        audio_b64 = base64.b64encode(f.read()).decode()
+
+    # Transcribe with diarization
+    stt = requests.post(
+        "https://apim-ai-apis.azure-api.net/v1/whisper/transcribe/base64",
+        headers={"Ocp-Apim-Subscription-Key": API_KEY, "Content-Type": "application/json"},
+        json={"audio": audio_b64, "diarize": True, "language": "en"},
+    ).json()
+
+    # Build speaker-labeled transcript
+    lines, current_speaker, words = [], None, []
+    for w in stt.get("words", []):
+        if w.get("speaker") != current_speaker:
+            if words:
+                lines.append(f"[{current_speaker}]: {' '.join(words)}")
+            current_speaker = w.get("speaker")
+            words = [w["word"]]
+        else:
+            words.append(w["word"])
+    if words:
+        lines.append(f"[{current_speaker}]: {' '.join(words)}")
+    transcript = "\n".join(lines)
+
+    # Analyze with LLM
+    client = OpenAI(base_url="https://apim-ai-apis.azure-api.net/v1", api_key=API_KEY)
+    analysis = client.chat.completions.create(
+        model="claude-haiku-4-5",
+        messages=[
+            {"role": "system", "content": "Analyze this support call. Return JSON with: sentiment (positive/negative/neutral), topics (list), resolution (resolved/unresolved), satisfaction_score (1-10), action_items (list)."},
+            {"role": "user", "content": transcript},
+        ],
+        response_format={"type": "json_object"},
+    )
+
+    return {"transcript": transcript, "analysis": analysis.choices[0].message.content}
+```
+
+### Podcast Processing Pipeline
+
+```python
+import requests
+import base64
+import json
+
+API_KEY = "YOUR_KEY"
+
+def process_podcast(audio_path: str) -> dict:
+    """Process a podcast: transcribe, extract chapters, generate summary."""
+    with open(audio_path, "rb") as f:
+        audio_b64 = base64.b64encode(f.read()).decode()
+
+    # Transcribe with speakers
+    result = requests.post(
+        "https://apim-ai-apis.azure-api.net/v1/whisper/transcribe/base64",
+        headers={"Ocp-Apim-Subscription-Key": API_KEY, "Content-Type": "application/json"},
+        json={"audio": audio_b64, "diarize": True},
+    ).json()
+
+    transcript = result.get("text", "")
+    processing_time = result.get("metadata", {}).get("processingTimeMs", 0)
+
+    return {
+        "transcript": transcript,
+        "word_count": len(transcript.split()),
+        "processing_time_ms": processing_time,
+        "speakers": list(set(w.get("speaker", "") for w in result.get("words", []) if w.get("speaker"))),
+    }
+
+info = process_podcast("episode_42.mp3")
+print(f"Words: {info['word_count']}, Speakers: {info['speakers']}")
+```
+
+## Migration Guides
+
+### Migrating from Google Cloud Speech-to-Text
+
+```python
+# BEFORE: Google Cloud STT ($0.016/min)
+from google.cloud import speech_v1
+
+client = speech_v1.SpeechClient()
+with open("audio.wav", "rb") as f:
+    audio = speech_v1.RecognitionAudio(content=f.read())
+config = speech_v1.RecognitionConfig(
+    encoding=speech_v1.RecognitionConfig.AudioEncoding.LINEAR16,
+    sample_rate_hertz=16000,
+    language_code="en-US",
+    enable_word_time_offsets=True,
+    enable_automatic_punctuation=True,
+)
+response = client.recognize(config=config, audio=audio)
+text = " ".join(r.alternatives[0].transcript for r in response.results)
+
+# AFTER: Brainiall Whisper ($0.006/min) — 2.7x cheaper
+import requests, base64
+
+with open("audio.wav", "rb") as f:
+    audio_b64 = base64.b64encode(f.read()).decode()
+response = requests.post(
+    "https://apim-ai-apis.azure-api.net/v1/whisper/transcribe/base64",
+    headers={"Ocp-Apim-Subscription-Key": "YOUR_KEY", "Content-Type": "application/json"},
+    json={"audio": audio_b64, "language": "en"},
+)
+text = response.json()["text"]
+```
+
+### Migrating from AssemblyAI
+
+```python
+# BEFORE: AssemblyAI ($0.0025/min)
+import assemblyai as aai
+aai.settings.api_key = "YOUR_ASSEMBLYAI_KEY"
+transcriber = aai.Transcriber()
+config = aai.TranscriptionConfig(speaker_labels=True, language_code="en")
+transcript = transcriber.transcribe("audio.wav", config=config)
+text = transcript.text
+
+# AFTER: Brainiall Whisper ($0.006/min, or Compact $0.002/min for English-only)
+import requests, base64
+
+with open("audio.wav", "rb") as f:
+    audio_b64 = base64.b64encode(f.read()).decode()
+response = requests.post(
+    "https://apim-ai-apis.azure-api.net/v1/whisper/transcribe/base64",
+    headers={"Ocp-Apim-Subscription-Key": "YOUR_KEY", "Content-Type": "application/json"},
+    json={"audio": audio_b64, "diarize": True},
+)
+text = response.json()["text"]
+```
+
+### Migrating from Deepgram
+
+```python
+# BEFORE: Deepgram ($0.0043-0.006/min)
+from deepgram import DeepgramClient, PrerecordedOptions
+deepgram = DeepgramClient("YOUR_DEEPGRAM_KEY")
+with open("audio.wav", "rb") as f:
+    buffer = f.read()
+options = PrerecordedOptions(model="nova-2", smart_format=True, diarize=True)
+response = deepgram.listen.rest.v("1").transcribe_file({"buffer": buffer}, options)
+text = response.results.channels[0].alternatives[0].transcript
+
+# AFTER: Brainiall ($0.002-0.006/min)
+import requests, base64
+
+with open("audio.wav", "rb") as f:
+    audio_b64 = base64.b64encode(f.read()).decode()
+response = requests.post(
+    "https://apim-ai-apis.azure-api.net/v1/whisper/transcribe/base64",
+    headers={"Ocp-Apim-Subscription-Key": "YOUR_KEY", "Content-Type": "application/json"},
+    json={"audio": audio_b64, "diarize": True},
+)
+text = response.json()["text"]
 ```
 
 ## MCP Server
