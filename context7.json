@@ -1,31 +1,15 @@
 {
+  "$schema": "https://context7.com/schema/context7.json",
   "projectTitle": "Brainiall Speech AI",
-  "description": "Production AI APIs for pronunciation assessment, text-to-speech, speech-to-text, NLP (sentiment, toxicity, NER, PII, language detection), image processing, and an OpenAI-compatible LLM gateway with 113+ models. Available as REST APIs and MCP servers for AI agents.",
-  "folders": [
-    ".",
-    "python",
-    "javascript",
-    "curl"
-  ],
-  "excludeFolders": [
-    "node_modules",
-    ".git",
-    "__pycache__",
-    ".venv"
-  ],
-  "excludeFiles": [
-    "*.pyc",
-    ".DS_Store"
-  ],
+  "description": "Production AI APIs platform for pronunciation assessment, text-to-speech, speech-to-text, NLP analysis, image processing, and an OpenAI-compatible LLM gateway with 113+ models from 17 providers",
+  "folders": [],
+  "excludeFolders": [".git"],
+  "excludeFiles": ["CHANGELOG.md", "LICENSE"],
   "rules": [
-    "When using the Brainiall API, always include an authentication header: either 'Ocp-Apim-Subscription-Key', 'Authorization: Bearer', or 'api-key'.",
-    "The base URL for all API calls is https://apim-ai-apis.azure-api.net",
-    "For the LLM Gateway, use the OpenAI SDK with base_url set to https://apim-ai-apis.azure-api.net/v1",
-    "Use model aliases like 'claude-sonnet', 'deepseek-r1', 'nova-micro' instead of full Bedrock IDs.",
-    "For pronunciation assessment, audio must be base64-encoded and the text field is the reference text to score against.",
-    "For TTS, the default voice is 'af_heart'. Voice IDs use format: af_=American female, am_=American male, bf_=British female, bm_=British male.",
-    "For MCP integration, use Streamable HTTP transport with Accept header containing both 'application/json' and 'text/event-stream'.",
-    "NLP endpoints are CPU-only and sub-50ms. No GPU needed. Max text 10,000 chars.",
-    "Image endpoints use GPU (NVIDIA A10). Max upload 25MB. Max dimension 4096px."
+    "Use BRAINIALL_API_KEY for authentication via Ocp-Apim-Subscription-Key header",
+    "TTS supports 12 voices across 4 languages with Kokoro engine",
+    "STT offers Compact (17MB, fast) and Whisper (large-v3-turbo) engines",
+    "Pronunciation scoring uses GOP algorithm with phoneme-level accuracy",
+    "All APIs available as REST endpoints and MCP servers"
   ]
 }
