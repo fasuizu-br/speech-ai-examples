@@ -1,0 +1,433 @@
+# Brainiall Speech-to-Text (STT) API — Full Documentation
+
+## Overview
+
+Brainiall STT API provides two speech-to-text engines: a compact English-only model (17MB, fast) and Whisper large-v3-turbo (809M params, 99 languages, speaker diarization). Both return word-level timestamps and confidence scores. An affordable alternative to Google Cloud Speech-to-Text, AssemblyAI, Deepgram, and Amazon Transcribe.
+
+Pricing: Compact STT $0.002/min, Whisper Pro $0.006/min. Compare: AssemblyAI $0.0025/min, Google Cloud $0.016/min, Deepgram $0.0043/min.
+
+## Base URLs
+
+- Compact STT: `https://apim-ai-apis.azure-api.net/v1/stt`
+- Whisper Pro: `https://apim-ai-apis.azure-api.net/v1/whisper`
+
+## Authentication
+
+Include ONE of these headers in every request:
+
+1. Bearer Token: `Authorization: Bearer YOUR_KEY`
+2. API Key: `api-key: YOUR_KEY`
+3. Subscription Key: `Ocp-Apim-Subscription-Key: YOUR_KEY`
+
+Get your API key at https://brainiall.com
+
+## Endpoints
+
+### POST /v1/stt/transcribe/base64
+
+Compact STT engine. 17MB ONNX model optimized for short English utterances. Sub-200ms latency. Best for: voice commands, short dictation, real-time transcription of English speech.
+
+Request:
+```json
+{
+  "audio": "<base64-encoded WAV/MP3/FLAC/OGG>",
+  "include_timestamps": true,
+  "format": "wav"
+}
+```
+
+Parameters:
+- `audio` (string, required): Base64-encoded audio data.
+- `include_timestamps` (boolean, optional): Include word-level timestamps. Default: true.
+- `format` (string, optional): Audio format hint. Default: `wav`. Supported: wav, mp3, flac, ogg.
+
+Response:
+```json
+{
+  "text": "hello world how are you",
+  "words": [
+    {"word": "hello", "start": 0.12, "end": 0.45, "confidence": 0.98},
+    {"word": "world", "start": 0.52, "end": 0.89, "confidence": 0.97},
+    {"word": "how", "start": 0.95, "end": 1.12, "confidence": 0.99},
+    {"word": "are", "start": 1.15, "end": 1.28, "confidence": 0.98},
+    {"word": "you", "start": 1.30, "end": 1.52, "confidence": 0.97}
+  ],
+  "audioDurationMs": 1800
+}
+```
+
+### POST /v1/stt/transcribe
+
+Multipart form-data variant. Fields: `audio` (file), `include_timestamps` (boolean).
+
+### POST /v1/whisper/transcribe/base64
+
+Whisper Pro engine. Whisper large-v3-turbo (809M params). 99 languages. Optional speaker diarization via pyannote. Best for: multilingual transcription, long-form audio, meeting transcription, podcast processing.
+
+Request:
+```json
+{
+  "audio": "<base64-encoded audio>",
+  "language": "en",
+  "diarize": false,
+  "format": "wav"
+}
+```
+
+Parameters:
+- `audio` (string, required): Base64-encoded audio data.
+- `language` (string, optional): BCP-47 language code. Auto-detected if omitted. Examples: `en`, `es`, `fr`, `de`, `pt`, `ja`, `zh`, `ar`, `ko`, `hi`, `ru`, `it`, `nl`, `tr`, `pl`, `sv`, `da`, `fi`, `no`.
+- `diarize` (boolean, optional): Enable speaker diarization. Default: false. When true, each word includes a `speaker` field.
+- `format` (string, optional): Audio format hint. Default: `wav`.
+
+Response (without diarization):
+```json
+{
+  "text": "Hello, this is a test of the speech recognition system.",
+  "words": [
+    {"word": "Hello", "start": 0.08, "end": 0.42, "confidence": 0.99},
+    {"word": "this", "start": 0.50, "end": 0.72, "confidence": 0.98},
+    {"word": "is", "start": 0.75, "end": 0.88, "confidence": 0.99},
+    {"word": "a", "start": 0.90, "end": 0.95, "confidence": 0.97},
+    {"word": "test", "start": 0.98, "end": 1.25, "confidence": 0.99},
+    {"word": "of", "start": 1.28, "end": 1.35, "confidence": 0.98},
+    {"word": "the", "start": 1.38, "end": 1.48, "confidence": 0.99},
+    {"word": "speech", "start": 1.52, "end": 1.85, "confidence": 0.98},
+    {"word": "recognition", "start": 1.88, "end": 2.42, "confidence": 0.97},
+    {"word": "system", "start": 2.45, "end": 2.88, "confidence": 0.99}
+  ],
+  "metadata": {
+    "language": "en",
+    "languageProbability": 0.998,
+    "processingTimeMs": 1840
+  }
+}
+```
+
+Response (with diarization):
+```json
+{
+  "text": "Good morning everyone. Let's start the meeting.",
+  "words": [
+    {"word": "Good", "start": 0.10, "end": 0.35, "confidence": 0.99, "speaker": "SPEAKER_00"},
+    {"word": "morning", "start": 0.38, "end": 0.78, "confidence": 0.98, "speaker": "SPEAKER_00"},
+    {"word": "everyone", "start": 0.82, "end": 1.25, "confidence": 0.97, "speaker": "SPEAKER_00"},
+    {"word": "Let's", "start": 1.80, "end": 2.05, "confidence": 0.98, "speaker": "SPEAKER_01"},
+    {"word": "start", "start": 2.08, "end": 2.35, "confidence": 0.99, "speaker": "SPEAKER_01"},
+    {"word": "the", "start": 2.38, "end": 2.48, "confidence": 0.99, "speaker": "SPEAKER_01"},
+    {"word": "meeting", "start": 2.52, "end": 2.92, "confidence": 0.98, "speaker": "SPEAKER_01"}
+  ],
+  "metadata": {"language": "en", "languageProbability": 0.998, "processingTimeMs": 2450}
+}
+```
+
+### POST /v1/whisper/transcribe
+
+Multipart form-data variant. Fields: `audio` (file), `language` (string), `diarize` (boolean).
+
+### GET /v1/stt/health
+
+Compact STT health check.
+
+### GET /v1/whisper/health
+
+Whisper Pro health check.
+
+## Code Examples
+
+### Python: Basic Transcription (Compact STT)
+
+```python
+import requests
+import base64
+
+API_KEY = "YOUR_KEY"
+HEADERS = {"Ocp-Apim-Subscription-Key": API_KEY, "Content-Type": "application/json"}
+
+# Read and encode audio
+with open("recording.wav", "rb") as f:
+    audio_b64 = base64.b64encode(f.read()).decode()
+
+# Transcribe
+response = requests.post(
+    "https://apim-ai-apis.azure-api.net/v1/stt/transcribe/base64",
+    headers=HEADERS,
+    json={"audio": audio_b64, "include_timestamps": True}
+)
+
+result = response.json()
+print(f"Text: {result['text']}")
+print(f"Duration: {result['audioDurationMs']}ms")
+for word in result["words"]:
+    print(f"  [{word['start']:.2f}-{word['end']:.2f}] {word['word']} ({word['confidence']:.0%})")
+```
+
+### Python: Whisper Multilingual Transcription
+
+```python
+import requests
+import base64
+
+API_KEY = "YOUR_KEY"
+HEADERS = {"Ocp-Apim-Subscription-Key": API_KEY, "Content-Type": "application/json"}
+
+with open("meeting.wav", "rb") as f:
+    audio_b64 = base64.b64encode(f.read()).decode()
+
+# Auto-detect language, enable speaker diarization
+response = requests.post(
+    "https://apim-ai-apis.azure-api.net/v1/whisper/transcribe/base64",
+    headers=HEADERS,
+    json={
+        "audio": audio_b64,
+        "diarize": True,
+        "format": "wav"
+    }
+)
+
+result = response.json()
+print(f"Detected language: {result['metadata']['language']}")
+print(f"Processing time: {result['metadata']['processingTimeMs']}ms")
+print(f"\nTranscript:")
+
+current_speaker = None
+for word in result["words"]:
+    if word.get("speaker") != current_speaker:
+        current_speaker = word.get("speaker")
+        print(f"\n[{current_speaker}]: ", end="")
+    print(f"{word['word']} ", end="")
+```
+
+### Python: Multipart File Upload (Whisper)
+
+```python
+import requests
+
+API_KEY = "YOUR_KEY"
+
+# Upload audio file directly (no base64 encoding needed)
+with open("podcast.mp3", "rb") as f:
+    response = requests.post(
+        "https://apim-ai-apis.azure-api.net/v1/whisper/transcribe",
+        headers={"Ocp-Apim-Subscription-Key": API_KEY},
+        files={"audio": ("podcast.mp3", f, "audio/mpeg")},
+        data={"language": "en", "diarize": "true"}
+    )
+
+result = response.json()
+print(result["text"])
+```
+
+### Python: Batch Transcription Pipeline
+
+```python
+import requests
+import base64
+from pathlib import Path
+from concurrent.futures import ThreadPoolExecutor
+
+API_KEY = "YOUR_KEY"
+HEADERS = {"Ocp-Apim-Subscription-Key": API_KEY, "Content-Type": "application/json"}
+
+def transcribe_file(filepath: Path) -> dict:
+    """Transcribe a single audio file using Whisper."""
+    audio_b64 = base64.b64encode(filepath.read_bytes()).decode()
+    response = requests.post(
+        "https://apim-ai-apis.azure-api.net/v1/whisper/transcribe/base64",
+        headers=HEADERS,
+        json={"audio": audio_b64, "language": "en"}
+    )
+    return {"file": filepath.name, "result": response.json()}
+
+# Transcribe all WAV files in a directory
+audio_dir = Path("recordings")
+audio_files = list(audio_dir.glob("*.wav"))
+
+print(f"Transcribing {len(audio_files)} files...")
+
+with ThreadPoolExecutor(max_workers=5) as pool:
+    results = list(pool.map(transcribe_file, audio_files))
+
+for item in results:
+    text = item["result"].get("text", "ERROR")
+    print(f"  {item['file']}: {text[:80]}...")
+```
+
+### Python: STT + LLM Pipeline (Transcribe then Analyze)
+
+```python
+import requests
+import base64
+from openai import OpenAI
+
+API_KEY = "YOUR_KEY"
+
+# Step 1: Transcribe audio with Whisper
+with open("customer_call.wav", "rb") as f:
+    audio_b64 = base64.b64encode(f.read()).decode()
+
+stt_response = requests.post(
+    "https://apim-ai-apis.azure-api.net/v1/whisper/transcribe/base64",
+    headers={"Ocp-Apim-Subscription-Key": API_KEY, "Content-Type": "application/json"},
+    json={"audio": audio_b64, "diarize": True}
+)
+transcript = stt_response.json()["text"]
+
+# Step 2: Analyze with LLM via the same API key
+client = OpenAI(
+    base_url="https://apim-ai-apis.azure-api.net/v1",
+    api_key=API_KEY
+)
+
+analysis = client.chat.completions.create(
+    model="claude-haiku-4-5",
+    messages=[
+        {"role": "system", "content": "Analyze this customer support call transcript. Extract: sentiment, key topics, action items."},
+        {"role": "user", "content": transcript}
+    ]
+)
+
+print(f"Transcript: {transcript[:200]}...")
+print(f"\nAnalysis:\n{analysis.choices[0].message.content}")
+```
+
+### JavaScript: Whisper Transcription
+
+```javascript
+import fs from "fs";
+
+const API_KEY = "YOUR_KEY";
+
+async function transcribe(audioPath, options = {}) {
+  const audioBuffer = fs.readFileSync(audioPath);
+  const audioBase64 = audioBuffer.toString("base64");
+
+  const response = await fetch(
+    "https://apim-ai-apis.azure-api.net/v1/whisper/transcribe/base64",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Ocp-Apim-Subscription-Key": API_KEY,
+      },
+      body: JSON.stringify({
+        audio: audioBase64,
+        language: options.language,
+        diarize: options.diarize || false,
+      }),
+    }
+  );
+
+  return response.json();
+}
+
+// Basic transcription
+const result = await transcribe("audio.wav", { language: "en" });
+console.log("Text:", result.text);
+console.log("Language:", result.metadata.language);
+
+// With speaker diarization
+const meeting = await transcribe("meeting.wav", { diarize: true });
+for (const word of meeting.words) {
+  if (word.speaker) {
+    process.stdout.write(`[${word.speaker}] ${word.word} `);
+  }
+}
+```
+
+### curl: STT Examples
+
+```bash
+API_KEY="YOUR_KEY"
+
+# Compact STT (English, fast)
+curl -X POST "https://apim-ai-apis.azure-api.net/v1/stt/transcribe/base64" \
+  -H "Content-Type: application/json" \
+  -H "Ocp-Apim-Subscription-Key: $API_KEY" \
+  -d "{\"audio\": \"$(base64 -i audio.wav)\", \"include_timestamps\": true}" \
+  | python3 -m json.tool
+
+# Whisper Pro (multilingual)
+curl -X POST "https://apim-ai-apis.azure-api.net/v1/whisper/transcribe/base64" \
+  -H "Content-Type: application/json" \
+  -H "Ocp-Apim-Subscription-Key: $API_KEY" \
+  -d "{\"audio\": \"$(base64 -i meeting.wav)\", \"language\": \"en\", \"diarize\": true}" \
+  | python3 -m json.tool
+
+# Whisper multipart upload
+curl -X POST "https://apim-ai-apis.azure-api.net/v1/whisper/transcribe" \
+  -H "Ocp-Apim-Subscription-Key: $API_KEY" \
+  -F "audio=@podcast.mp3" \
+  -F "language=en" \
+  -F "diarize=true" \
+  | python3 -m json.tool
+
+# Health check
+curl -s "https://apim-ai-apis.azure-api.net/v1/whisper/health" \
+  -H "Ocp-Apim-Subscription-Key: $API_KEY" | python3 -m json.tool
+```
+
+## MCP Server
+
+### Configuration (Claude Desktop / Cursor / Cline)
+
+```json
+{
+  "mcpServers": {
+    "brainiall-speech": {
+      "url": "https://apim-ai-apis.azure-api.net/mcp/pronunciation/mcp",
+      "headers": {
+        "Ocp-Apim-Subscription-Key": "YOUR_KEY",
+        "Accept": "application/json, text/event-stream"
+      }
+    }
+  }
+}
+```
+
+STT tools available via the Speech AI MCP server:
+- `transcribe_audio`: Compact STT for English speech
+- `transcribe_audio_pro`: Whisper Pro with 99 languages and speaker diarization
+- `check_stt_service`: Health check for compact STT
+- `check_whisper_service`: Health check for Whisper Pro
+
+## Supported Languages (Whisper Pro)
+
+99 languages including: English (en), Spanish (es), French (fr), German (de), Portuguese (pt), Japanese (ja), Chinese (zh), Arabic (ar), Korean (ko), Hindi (hi), Russian (ru), Italian (it), Dutch (nl), Turkish (tr), Polish (pl), Swedish (sv), Danish (da), Finnish (fi), Norwegian (no), Czech (cs), Romanian (ro), Hungarian (hu), Ukrainian (uk), Greek (el), Thai (th), Vietnamese (vi), Indonesian (id), Malay (ms), Hebrew (he), Persian (fa), and many more.
+
+Auto-detection: If `language` is not specified, Whisper automatically detects the language with >99% accuracy for most common languages.
+
+## Pricing
+
+| Engine | Price | Unit | Best For |
+|--------|-------|------|----------|
+| Compact STT | $0.002 | per minute | Short English utterances, voice commands |
+| Whisper Pro | $0.006 | per minute | Multilingual, long-form, meetings |
+
+Compare with competitors:
+- Google Cloud Speech-to-Text: $0.016/min (Enhanced)
+- AssemblyAI: $0.0025/min (Best)
+- Deepgram: $0.0043-0.006/min
+- Amazon Transcribe: $0.024/min
+- Azure Speech: $0.016/min
+- OpenAI Whisper API: $0.006/min
+
+## Technical Details
+
+- Compact model: 17MB ONNX, CTC-based, English-only
+- Whisper model: large-v3-turbo (809M params), 99 languages
+- Diarization: pyannote speaker segmentation
+- Audio formats: WAV, MP3, FLAC, OGG, M4A
+- Max audio length: 60 minutes (Whisper), 60 seconds (Compact)
+- Min audio length: 0.5 seconds
+- Sample rates: Any (automatically resampled to 16kHz)
+- Infrastructure: NVIDIA A10 GPU (24GB VRAM)
+
+## Links
+
+- Website: https://brainiall.com
+- Get API Key: https://brainiall.com
+- Speech AI Examples: https://github.com/fasuizu-br/speech-ai-examples
+- NLP API: https://github.com/fasuizu-br/brainiall-nlp-api
+- Image API: https://github.com/fasuizu-br/brainiall-image-api
+- LLM Gateway: https://github.com/fasuizu-br/brainiall-llm-gateway

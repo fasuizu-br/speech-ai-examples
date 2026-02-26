@@ -1,0 +1,412 @@
+# Brainiall Text-to-Speech (TTS) API — Full Documentation
+
+## Overview
+
+Brainiall TTS API provides production-ready text-to-speech synthesis with 12 natural-sounding English voices (American and British accents). Powered by the Kokoro speech synthesis engine, it delivers 24kHz WAV audio with sub-1 second latency on GPU. An affordable alternative to ElevenLabs, Google Cloud TTS, and Amazon Polly.
+
+Pricing: $0.01-0.03 per 1,000 characters. Compare: ElevenLabs $120-198/M chars, Google Cloud TTS $4/M chars.
+
+## Base URL
+
+https://apim-ai-apis.azure-api.net/v1/tts
+
+## Authentication
+
+Include ONE of these headers in every request:
+
+1. Bearer Token: `Authorization: Bearer YOUR_KEY`
+2. API Key: `api-key: YOUR_KEY`
+3. Subscription Key: `Ocp-Apim-Subscription-Key: YOUR_KEY`
+
+Get your API key at https://brainiall.com
+
+## Endpoints
+
+### POST /v1/tts/synthesize
+
+Convert text to speech audio. Returns binary WAV data (24kHz, 16-bit PCM).
+
+Request:
+```json
+{
+  "text": "Hello, welcome to our application.",
+  "voice": "af_heart",
+  "speed": 1.0,
+  "format": "wav"
+}
+```
+
+Parameters:
+- `text` (string, required): Text to synthesize. 1-5000 characters.
+- `voice` (string, optional): Voice ID. Default: `af_heart`. See voice list below.
+- `speed` (number, optional): Speech speed multiplier. Range: 0.25-4.0. Default: 1.0.
+- `format` (string, optional): Output format. Currently: `wav`. Default: `wav`.
+
+Response: Binary `audio/wav` data (24kHz, 16-bit PCM mono).
+
+Response headers:
+- `X-Audio-Duration-Ms`: Duration of generated audio in milliseconds
+- `X-Voice`: Voice ID used for synthesis
+- `X-Text-Length`: Number of characters processed
+
+### GET /v1/tts/voices
+
+List all available TTS voices with metadata.
+
+Response:
+```json
+{
+  "voices": [
+    {"id": "af_heart", "name": "Heart", "gender": "female", "accent": "american"},
+    {"id": "af_bella", "name": "Bella", "gender": "female", "accent": "american"},
+    {"id": "af_nicole", "name": "Nicole", "gender": "female", "accent": "american"},
+    {"id": "af_sarah", "name": "Sarah", "gender": "female", "accent": "american"},
+    {"id": "af_sky", "name": "Sky", "gender": "female", "accent": "american"},
+    {"id": "am_adam", "name": "Adam", "gender": "male", "accent": "american"},
+    {"id": "am_michael", "name": "Michael", "gender": "male", "accent": "american"},
+    {"id": "bf_emma", "name": "Emma", "gender": "female", "accent": "british"},
+    {"id": "bf_isabella", "name": "Isabella", "gender": "female", "accent": "british"},
+    {"id": "bm_george", "name": "George", "gender": "male", "accent": "british"},
+    {"id": "bm_lewis", "name": "Lewis", "gender": "male", "accent": "british"},
+    {"id": "bm_daniel", "name": "Daniel", "gender": "male", "accent": "british"}
+  ],
+  "defaultVoice": "af_heart"
+}
+```
+
+Voice ID naming convention:
+- `af_` = American female
+- `am_` = American male
+- `bf_` = British female
+- `bm_` = British male
+
+### GET /v1/tts/health
+
+Health check endpoint.
+
+Response:
+```json
+{"status": "healthy", "modelLoaded": true, "voices": 12}
+```
+
+## Code Examples
+
+### Python: Basic Text-to-Speech
+
+```python
+import requests
+
+API_KEY = "YOUR_KEY"
+BASE_URL = "https://apim-ai-apis.azure-api.net/v1/tts"
+HEADERS = {"Ocp-Apim-Subscription-Key": API_KEY}
+
+# Synthesize speech
+response = requests.post(
+    f"{BASE_URL}/synthesize",
+    headers=HEADERS,
+    json={
+        "text": "Hello, welcome to our application. How can I help you today?",
+        "voice": "af_heart",
+        "speed": 1.0
+    }
+)
+
+# Save the audio file
+with open("output.wav", "wb") as f:
+    f.write(response.content)
+
+print(f"Audio duration: {response.headers.get('X-Audio-Duration-Ms')}ms")
+print(f"Voice used: {response.headers.get('X-Voice')}")
+```
+
+### Python: List Available Voices
+
+```python
+import requests
+
+API_KEY = "YOUR_KEY"
+HEADERS = {"Ocp-Apim-Subscription-Key": API_KEY}
+
+response = requests.get(
+    "https://apim-ai-apis.azure-api.net/v1/tts/voices",
+    headers=HEADERS
+)
+
+voices = response.json()
+for voice in voices["voices"]:
+    print(f"{voice['id']:15s} {voice['name']:10s} {voice['gender']:8s} {voice['accent']}")
+```
+
+### Python: TTS with Voice Selection by Accent
+
+```python
+import requests
+
+API_KEY = "YOUR_KEY"
+BASE_URL = "https://apim-ai-apis.azure-api.net/v1/tts"
+HEADERS = {"Ocp-Apim-Subscription-Key": API_KEY}
+
+def synthesize(text: str, voice: str = "af_heart", speed: float = 1.0) -> bytes:
+    """Synthesize text to speech and return WAV audio bytes."""
+    response = requests.post(
+        f"{BASE_URL}/synthesize",
+        headers=HEADERS,
+        json={"text": text, "voice": voice, "speed": speed}
+    )
+    response.raise_for_status()
+    return response.content
+
+# American female voice
+audio = synthesize("Good morning! Let's get started.", voice="af_heart")
+with open("american_female.wav", "wb") as f:
+    f.write(audio)
+
+# British male voice
+audio = synthesize("Good morning! Let's get started.", voice="bm_george")
+with open("british_male.wav", "wb") as f:
+    f.write(audio)
+
+# Slow speed for language learning
+audio = synthesize("The quick brown fox jumps over the lazy dog.", voice="bf_emma", speed=0.7)
+with open("slow_british.wav", "wb") as f:
+    f.write(audio)
+
+# Fast narration
+audio = synthesize("Breaking news from the financial markets today.", voice="am_adam", speed=1.3)
+with open("fast_narration.wav", "wb") as f:
+    f.write(audio)
+```
+
+### Python: Batch TTS for Multiple Sentences
+
+```python
+import requests
+from pathlib import Path
+
+API_KEY = "YOUR_KEY"
+BASE_URL = "https://apim-ai-apis.azure-api.net/v1/tts"
+HEADERS = {"Ocp-Apim-Subscription-Key": API_KEY}
+
+sentences = [
+    "Welcome to our language learning platform.",
+    "Today we will practice pronunciation.",
+    "Listen carefully and repeat after me.",
+    "The weather is beautiful today.",
+    "Let's review what we learned yesterday.",
+]
+
+output_dir = Path("audio_files")
+output_dir.mkdir(exist_ok=True)
+
+for i, text in enumerate(sentences):
+    response = requests.post(
+        f"{BASE_URL}/synthesize",
+        headers=HEADERS,
+        json={"text": text, "voice": "bf_emma", "speed": 0.9}
+    )
+    filepath = output_dir / f"sentence_{i+1:02d}.wav"
+    filepath.write_bytes(response.content)
+    duration = response.headers.get("X-Audio-Duration-Ms", "?")
+    print(f"[{i+1}/{len(sentences)}] {filepath.name} ({duration}ms): {text[:50]}")
+
+print(f"\nGenerated {len(sentences)} audio files in {output_dir}/")
+```
+
+### Python: TTS with OpenAI SDK (Compatible)
+
+```python
+from openai import OpenAI
+
+# Brainiall is OpenAI-compatible for LLM, but TTS uses direct REST
+# Use the REST API for TTS synthesis
+import requests
+
+client = OpenAI(
+    base_url="https://apim-ai-apis.azure-api.net/v1",
+    api_key="YOUR_KEY"
+)
+
+# First, generate text with the LLM
+response = client.chat.completions.create(
+    model="claude-haiku-4-5",
+    messages=[{"role": "user", "content": "Write a 2-sentence greeting for a podcast intro."}]
+)
+generated_text = response.choices[0].message.content
+
+# Then convert to speech
+tts_response = requests.post(
+    "https://apim-ai-apis.azure-api.net/v1/tts/synthesize",
+    headers={"Ocp-Apim-Subscription-Key": "YOUR_KEY"},
+    json={"text": generated_text, "voice": "am_michael", "speed": 1.0}
+)
+
+with open("podcast_intro.wav", "wb") as f:
+    f.write(tts_response.content)
+print(f"Generated intro: {generated_text}")
+```
+
+### JavaScript: Text-to-Speech
+
+```javascript
+const API_KEY = "YOUR_KEY";
+const BASE_URL = "https://apim-ai-apis.azure-api.net/v1/tts";
+
+async function synthesize(text, voice = "af_heart", speed = 1.0) {
+  const response = await fetch(`${BASE_URL}/synthesize`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Ocp-Apim-Subscription-Key": API_KEY,
+    },
+    body: JSON.stringify({ text, voice, speed }),
+  });
+
+  const audioBuffer = await response.arrayBuffer();
+  const duration = response.headers.get("X-Audio-Duration-Ms");
+  console.log(`Generated ${duration}ms of audio`);
+  return Buffer.from(audioBuffer);
+}
+
+// Generate speech
+const audio = await synthesize("Hello from Brainiall TTS!", "bf_emma");
+
+// Save to file (Node.js)
+const fs = await import("fs");
+fs.writeFileSync("output.wav", audio);
+```
+
+### JavaScript: List Voices and Synthesize
+
+```javascript
+const API_KEY = "YOUR_KEY";
+const BASE_URL = "https://apim-ai-apis.azure-api.net/v1/tts";
+const headers = { "Ocp-Apim-Subscription-Key": API_KEY };
+
+// Get available voices
+const voicesResponse = await fetch(`${BASE_URL}/voices`, { headers });
+const { voices } = await voicesResponse.json();
+
+console.log("Available voices:");
+voices.forEach((v) => {
+  console.log(`  ${v.id} - ${v.name} (${v.gender}, ${v.accent})`);
+});
+
+// Synthesize with each British voice
+for (const voice of voices.filter((v) => v.accent === "british")) {
+  const response = await fetch(`${BASE_URL}/synthesize`, {
+    method: "POST",
+    headers: { ...headers, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      text: "Good afternoon. How may I assist you?",
+      voice: voice.id,
+    }),
+  });
+  const audio = Buffer.from(await response.arrayBuffer());
+  const fs = await import("fs");
+  fs.writeFileSync(`${voice.id}.wav`, audio);
+  console.log(`Saved ${voice.id}.wav (${voice.name})`);
+}
+```
+
+### curl: TTS Examples
+
+```bash
+API_KEY="YOUR_KEY"
+BASE="https://apim-ai-apis.azure-api.net/v1/tts"
+
+# Synthesize speech (output to file)
+curl -X POST "$BASE/synthesize" \
+  -H "Content-Type: application/json" \
+  -H "Ocp-Apim-Subscription-Key: $API_KEY" \
+  -d '{"text": "Hello world, this is a text to speech test.", "voice": "af_heart", "speed": 1.0}' \
+  --output output.wav
+
+# List available voices
+curl -s "$BASE/voices" \
+  -H "Ocp-Apim-Subscription-Key: $API_KEY" | python3 -m json.tool
+
+# British male voice at slow speed
+curl -X POST "$BASE/synthesize" \
+  -H "Content-Type: application/json" \
+  -H "Ocp-Apim-Subscription-Key: $API_KEY" \
+  -d '{"text": "The weather in London is quite pleasant today.", "voice": "bm_george", "speed": 0.8}' \
+  --output british_slow.wav
+
+# Health check
+curl -s "$BASE/health" \
+  -H "Ocp-Apim-Subscription-Key: $API_KEY" | python3 -m json.tool
+```
+
+## MCP Server
+
+### Configuration (Claude Desktop / Cursor / Cline)
+
+```json
+{
+  "mcpServers": {
+    "brainiall-speech": {
+      "url": "https://apim-ai-apis.azure-api.net/mcp/pronunciation/mcp",
+      "headers": {
+        "Ocp-Apim-Subscription-Key": "YOUR_KEY",
+        "Accept": "application/json, text/event-stream"
+      }
+    }
+  }
+}
+```
+
+TTS tools available via the Speech AI MCP server:
+- `synthesize_speech`: Convert text to speech audio
+- `list_tts_voices`: Get all available voices with metadata
+- `check_tts_service`: Health check for TTS service
+
+## Voice Comparison Guide
+
+| Voice ID | Name | Gender | Accent | Best For |
+|----------|------|--------|--------|----------|
+| af_heart | Heart | Female | American | General purpose, warm tone |
+| af_bella | Bella | Female | American | Conversational, friendly |
+| af_nicole | Nicole | Female | American | Professional, clear |
+| af_sarah | Sarah | Female | American | Narration, storytelling |
+| af_sky | Sky | Female | American | Young, energetic |
+| am_adam | Adam | Male | American | News, announcements |
+| am_michael | Michael | Male | American | Professional, authoritative |
+| bf_emma | Emma | Female | British | Education, tutorials |
+| bf_isabella | Isabella | Female | British | Elegant, formal |
+| bm_george | George | Male | British | Documentary, narration |
+| bm_lewis | Lewis | Male | British | Casual, approachable |
+| bm_daniel | Daniel | Male | British | Professional, clear |
+
+## Pricing
+
+| Tier | Price per 1K characters | Monthly cost (1M chars) |
+|------|------------------------|------------------------|
+| Standard | $0.01-0.03 | $10-30 |
+
+Compare with competitors:
+- ElevenLabs: $0.12-0.20 per 1K chars
+- Google Cloud TTS: $0.004 per 1K chars (Standard), $0.016 (Neural)
+- Amazon Polly: $0.004 per 1K chars (Standard), $0.016 (Neural)
+- Azure Speech: $0.016 per 1K chars (Neural)
+- OpenAI TTS: $0.015 per 1K chars
+
+## Technical Details
+
+- Engine: Kokoro speech synthesis
+- Sample rate: 24kHz
+- Bit depth: 16-bit PCM
+- Channels: Mono
+- Format: WAV (RIFF)
+- Max text length: 5,000 characters per request
+- Speed range: 0.25x to 4.0x
+- Latency: Sub-1 second on GPU (NVIDIA A10)
+- Languages: English (American and British accents)
+
+## Links
+
+- Website: https://brainiall.com
+- Get API Key: https://brainiall.com
+- Speech AI Examples: https://github.com/fasuizu-br/speech-ai-examples
+- NLP API: https://github.com/fasuizu-br/brainiall-nlp-api
+- Image API: https://github.com/fasuizu-br/brainiall-image-api
+- LLM Gateway: https://github.com/fasuizu-br/brainiall-llm-gateway
