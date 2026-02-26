@@ -1,0 +1,25 @@
+name: Update Context7
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "llms.txt"
+      - "llms-full.txt"
+      - "context7.json"
+      - "python/**"
+      - "javascript/**"
+      - "curl/**"
+      - "README.md"
+  workflow_dispatch:
+
+jobs:
+  update-context7:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Add to Context7
+        uses: rennf93/upsert-context7@v1
+        with:
+          operation: add
