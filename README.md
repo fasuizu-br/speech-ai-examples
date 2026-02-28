@@ -33,7 +33,7 @@ Authorization: Bearer YOUR_KEY
 api-key: YOUR_KEY
 ```
 
-Get API keys at the [portal](https://brainiall-portal.thankfulfield-a7857897.eastus.azurecontainerapps.io) (GitHub sign-in, purchase credits, create key).
+Get API keys at the [portal](https://app.brainiall.com) (GitHub sign-in, purchase credits, create key).
 
 ## Quick Start
 
@@ -189,7 +189,7 @@ Also available on: [Smithery](https://smithery.ai/server/fabiosuizu/pronunciatio
 | Image (any) | $0.003-0.005 | per image |
 | LLM Gateway | Bedrock pricing | per MTok |
 
-Credit packages: $5, $10, $25, $50, $100. [Portal](https://brainiall-portal.thankfulfield-a7857897.eastus.azurecontainerapps.io/pricing) | [Azure Marketplace](https://azuremarketplace.microsoft.com) (search "Brainiall").
+Credit packages: $5, $10, $25, $50, $100. [Portal](https://app.brainiall.com/pricing) | [Azure Marketplace](https://azuremarketplace.microsoft.com) (search "Brainiall").
 
 ## License
 
