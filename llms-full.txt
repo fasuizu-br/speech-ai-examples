@@ -9,7 +9,7 @@
 - `Authorization: Bearer YOUR_KEY`
 - `api-key: YOUR_KEY`
 
-**Get API keys:** Visit https://brainiall-portal.thankfulfield-a7857897.eastus.azurecontainerapps.io — sign in with GitHub, purchase credits, create API key.
+**Get API keys:** Visit https://app.brainiall.com — sign in with GitHub, purchase credits, create API key.
 
 ---
 
@@ -618,8 +618,8 @@ curl -X POST https://apim-ai-apis.azure-api.net/v1/nlp/toxicity \
 |---------|-------|------|
 | Pronunciation Assessment | $0.02 | per call |
 | Text-to-Speech | $0.01-0.03 | per 1K chars |
-| Speech-to-Text (compact) | $0.002 | per minute |
-| Whisper Pro (multilingual) | $0.006 | per minute |
+| Speech-to-Text (compact) | $0.01 | per request |
+| Whisper Pro (multilingual) | $0.02 | per minute |
 | NLP (any endpoint) | $0.001-0.002 | per call |
 | Image (any endpoint) | $0.003-0.005 | per image |
 | LLM Gateway | Bedrock pricing | per MTok (see model list) |

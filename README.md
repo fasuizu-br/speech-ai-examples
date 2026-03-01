@@ -183,8 +183,8 @@ Also available on: [Smithery](https://smithery.ai/server/fabiosuizu/pronunciatio
 |---------|-------|------|
 | Pronunciation | $0.02 | per call |
 | TTS | $0.01-0.03 | per 1K chars |
-| STT (compact) | $0.002 | per minute |
-| Whisper Pro | $0.006 | per minute |
+| STT (compact) | $0.01 | per request |
+| Whisper Pro | $0.02 | per minute |
 | NLP (any) | $0.001-0.002 | per call |
 | Image (any) | $0.003-0.005 | per image |
 | LLM Gateway | Bedrock pricing | per MTok |

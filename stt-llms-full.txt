@@ -4,7 +4,7 @@
 
 Brainiall STT API provides two speech-to-text engines: a compact English-only model (17MB, fast) and Whisper large-v3-turbo (809M params, 99 languages, speaker diarization). Both return word-level timestamps and confidence scores. An affordable alternative to Google Cloud Speech-to-Text, AssemblyAI, Deepgram, and Amazon Transcribe.
 
-Pricing: Compact STT $0.002/min, Whisper Pro $0.006/min. Compare: AssemblyAI $0.0025/min, Google Cloud $0.016/min, Deepgram $0.0043/min.
+Pricing: Compact STT $0.01/request, Whisper Pro $0.02/min. Compare: AssemblyAI $0.0025/min, Google Cloud $0.016/min, Deepgram $0.0043/min.
 
 ## Base URLs
 
@@ -872,7 +872,7 @@ config = speech_v1.RecognitionConfig(
 response = client.recognize(config=config, audio=audio)
 text = " ".join(r.alternatives[0].transcript for r in response.results)
 
-# AFTER: Brainiall Whisper ($0.006/min) — 2.7x cheaper
+# AFTER: Brainiall Whisper ($0.02/min) — cheaper with speaker diarization
 import requests, base64
 
 with open("audio.wav", "rb") as f:
@@ -896,7 +896,7 @@ config = aai.TranscriptionConfig(speaker_labels=True, language_code="en")
 transcript = transcriber.transcribe("audio.wav", config=config)
 text = transcript.text
 
-# AFTER: Brainiall Whisper ($0.006/min, or Compact $0.002/min for English-only)
+# AFTER: Brainiall Whisper ($0.02/min, or Compact STT $0.01/request for English-only)
 import requests, base64
 
 with open("audio.wav", "rb") as f:
@@ -921,7 +921,7 @@ options = PrerecordedOptions(model="nova-2", smart_format=True, diarize=True)
 response = deepgram.listen.rest.v("1").transcribe_file({"buffer": buffer}, options)
 text = response.results.channels[0].alternatives[0].transcript
 
-# AFTER: Brainiall ($0.002-0.006/min)
+# AFTER: Brainiall (Compact $0.01/request, Whisper $0.02/min)
 import requests, base64
 
 with open("audio.wav", "rb") as f:
@@ -968,8 +968,8 @@ Auto-detection: If `language` is not specified, Whisper automatically detects th
 
 | Engine | Price | Unit | Best For |
 |--------|-------|------|----------|
-| Compact STT | $0.002 | per minute | Short English utterances, voice commands |
-| Whisper Pro | $0.006 | per minute | Multilingual, long-form, meetings |
+| Compact STT | $0.01 | per request | Short English utterances, voice commands |
+| Whisper Pro | $0.02 | per minute | Multilingual, long-form, meetings |
 
 Compare with competitors:
 - Google Cloud Speech-to-Text: $0.016/min (Enhanced)

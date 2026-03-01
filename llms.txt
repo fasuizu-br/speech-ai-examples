@@ -4,7 +4,7 @@
 
 Base URL: `https://apim-ai-apis.azure-api.net`
 Authentication: `Ocp-Apim-Subscription-Key`, `Authorization: Bearer`, or `api-key` header.
-Portal & API keys: `https://brainiall-portal.thankfulfield-a7857897.eastus.azurecontainerapps.io`
+Portal & API keys: `https://app.brainiall.com`
 
 ## Pronunciation Assessment API
 
@@ -93,5 +93,5 @@ const res = await client.chat.completions.create({ model: "claude-sonnet", messa
 ## Optional
 
 - [GitHub examples repo](https://github.com/fasuizu-br/speech-ai-examples): Python, JavaScript, curl examples and MCP configs.
-- [Pricing page](https://brainiall-portal.thankfulfield-a7857897.eastus.azurecontainerapps.io/pricing): Credit packages and per-model pricing.
+- [Pricing page](https://app.brainiall.com/pricing): Credit packages and per-model pricing.
 - [Azure Marketplace](https://azuremarketplace.microsoft.com): Search "Brainiall" for enterprise plans.
