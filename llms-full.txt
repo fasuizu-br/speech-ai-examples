@@ -1,6 +1,6 @@
 # Brainiall — AI APIs for Speech, Text, Image & LLM Inference
 
-> Brainiall provides production-ready AI APIs: pronunciation assessment (17MB ONNX, sub-500ms), text-to-speech (12 voices, sub-1s), speech-to-text (compact + Whisper multilingual), NLP suite (toxicity, sentiment, NER, PII, language detection — all CPU, sub-50ms), image processing (background removal, 4x upscaling, face restoration — GPU), and an OpenAI-compatible LLM gateway with 113+ models from 17 providers via AWS Bedrock. All APIs are also available as MCP servers for AI agents.
+> Brainiall provides production-ready AI APIs: pronunciation assessment (17MB ONNX, sub-500ms), text-to-speech (12 voices, sub-1s), speech-to-text (compact + Whisper multilingual), NLP suite (toxicity, sentiment, NER, PII, language detection — all CPU, sub-50ms), image processing (background removal, 4x upscaling, face restoration — GPU), and an OpenAI-compatible LLM gateway with 113+ models. All APIs are also available as MCP servers for AI agents.
 
 **Base URL:** `https://apim-ai-apis.azure-api.net`
 
@@ -351,7 +351,7 @@ Response:
 
 ## LLM Gateway (OpenAI-compatible)
 
-113+ models from 17 providers via AWS Bedrock. Standard Bedrock pricing, no markup. Fully compatible with OpenAI SDK, LiteLLM, LangChain, Cline, Cursor, Aider, and any OpenAI-compatible tool.
+113+ models with competitive pricing. Fully compatible with OpenAI SDK, LiteLLM, LangChain, Cline, Cursor, Aider, and any OpenAI-compatible tool.
 
 ### POST /v1/chat/completions
 
@@ -622,7 +622,7 @@ curl -X POST https://apim-ai-apis.azure-api.net/v1/nlp/toxicity \
 | Whisper Pro (multilingual) | $0.02 | per minute |
 | NLP (any endpoint) | $0.001-0.002 | per call |
 | Image (any endpoint) | $0.003-0.005 | per image |
-| LLM Gateway | Bedrock pricing | per MTok (see model list) |
+| LLM Gateway | competitive pricing | per MTok (see model list) |
 
 Credit packages: $5, $10, $25, $50, $100. Available at the portal or Azure Marketplace.
 

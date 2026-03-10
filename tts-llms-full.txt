@@ -971,8 +971,8 @@ audio = response.content
 ```
 
 Key differences:
-- No AWS credentials or boto3 setup needed
-- Simple REST API vs AWS SDK
+- No complex SDK or credentials setup needed
+- Simple REST API with single API key
 - Single API key authentication
 - No region-specific endpoints
 

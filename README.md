@@ -187,7 +187,7 @@ Also available on: [Smithery](https://smithery.ai/server/fabiosuizu/pronunciatio
 | Whisper Pro | $0.02 | per minute |
 | NLP (any) | $0.001-0.002 | per call |
 | Image (any) | $0.003-0.005 | per image |
-| LLM Gateway | Bedrock pricing | per MTok |
+| LLM Gateway | competitive pricing | per MTok |
 
 Credit packages: $5, $10, $25, $50, $100. [Portal](https://app.brainiall.com/pricing) | [Azure Marketplace](https://azuremarketplace.microsoft.com) (search "Brainiall").
 

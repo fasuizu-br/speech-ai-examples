@@ -1,6 +1,6 @@
 # Brainiall
 
-> Brainiall provides production AI APIs for speech processing (pronunciation assessment, text-to-speech, speech-to-text), NLP (sentiment, toxicity, NER, PII, language detection), image processing (background removal, upscaling, face restoration), and an OpenAI-compatible LLM gateway with 113+ models from 17 providers via AWS Bedrock. All APIs are available as REST endpoints and MCP servers for AI agents.
+> Brainiall provides production AI APIs for speech processing (pronunciation assessment, text-to-speech, speech-to-text), NLP (sentiment, toxicity, NER, PII, language detection), image processing (background removal, upscaling, face restoration), and an OpenAI-compatible LLM gateway with 113+ models. All APIs are available as REST endpoints and MCP servers for AI agents.
 
 Base URL: `https://apim-ai-apis.azure-api.net`
 Authentication: `Ocp-Apim-Subscription-Key`, `Authorization: Bearer`, or `api-key` header.
@@ -47,7 +47,7 @@ Portal & API keys: `https://app.brainiall.com`
 - [Chat completions](/v1/chat/completions): POST — OpenAI-compatible. 113+ models. Streaming SSE, tool calling, structured output, extended thinking. Works with OpenAI SDK, LiteLLM, LangChain, Cline, Cursor, Aider.
 - [List models](/v1/models): GET — All available models with pricing.
 - [Embeddings](/v1/embeddings): POST — Text and multimodal embeddings.
-- [Health check](/v1/health): GET — Gateway and AWS connection status.
+- [Health check](/v1/health): GET — Gateway health and connection status.
 
 ### Popular model aliases
 
