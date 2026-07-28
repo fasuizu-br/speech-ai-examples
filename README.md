@@ -1,195 +1,29 @@
-# Brainiall AI APIs
+# Brainiall Speech AI examples — migration notice
 
-[![API Status](https://img.shields.io/badge/API-Live-brightgreen)](https://apim-ai-apis.azure-api.net/v1/health)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![MCP Servers](https://img.shields.io/badge/MCP-20_Tools-purple)](https://apim-ai-apis.azure-api.net/mcp/pronunciation/mcp)
-[![Azure Marketplace](https://img.shields.io/badge/Azure-Marketplace-0078D4)](https://azuremarketplace.microsoft.com)
-[![Models](https://img.shields.io/badge/LLM_Gateway-113+_Models-orange)](https://apim-ai-apis.azure-api.net/v1/models)
+[![Current TTS health](https://img.shields.io/website?url=https%3A%2F%2Fapi.brainiall.com%2Fmcp%2Ftts%2Fhealth&label=TTS%20API)](https://api.brainiall.com/mcp/tts/health)
+[![Current TTS repository](https://img.shields.io/badge/current-brainiall--tts--mcp-blue)](https://github.com/fasuizu-br/brainiall-tts-mcp)
 
-Production AI APIs for speech, text, image, and LLM inference. Available as REST endpoints and MCP servers for AI agents.
+> **This repository is legacy.** The former `apim-ai-apis.azure-api.net` gateway and the old Speech AI MCP URLs documented in earlier revisions have been retired. Do not use those URLs. The other files in this repository are retained only as historical source and may no longer run.
 
-**Base URL:** `https://apim-ai-apis.azure-api.net`
-**Full API reference for LLMs:** [`llms-full.txt`](llms-full.txt) | [`llms.txt`](llms.txt)
+## Current supported surfaces
 
-## Products
+| Need | Current surface |
+|---|---|
+| Text-to-speech MCP server | `https://api.brainiall.com/mcp/tts/mcp` |
+| Text-to-speech REST endpoint | `POST https://api.brainiall.com/v1/tts/synthesize` |
+| TTS health check | [`https://api.brainiall.com/mcp/tts/health`](https://api.brainiall.com/mcp/tts/health) |
+| TTS setup, OpenAPI and maintained examples | [`fasuizu-br/brainiall-tts-mcp`](https://github.com/fasuizu-br/brainiall-tts-mcp) |
+| Brazilian Portuguese transcription | [Transcreve BR](https://www.brainiall.com/transcreve?utm_source=github&utm_medium=legacy_repo&utm_campaign=speech_ai_migration) |
+| Speech-to-text API overview | [Brainiall Speech-to-Text](https://www.brainiall.com/apis/speech-to-text?utm_source=github&utm_medium=legacy_repo&utm_campaign=speech_ai_migration) |
+| Account and API key | [Brainiall app](https://app.brainiall.com?utm_source=github&utm_medium=legacy_repo&utm_campaign=speech_ai_migration) |
 
-| Product | Endpoints | Latency | Notes |
-|---------|-----------|---------|-------|
-| **Pronunciation Assessment** | `/v1/pronunciation/assess/base64` | <500ms | 17MB ONNX, per-phoneme scoring (39 ARPAbet) |
-| **Text-to-Speech** | `/v1/tts/synthesize` | <1s | 12 voices (American + British), 24kHz WAV |
-| **Speech-to-Text** | `/v1/stt/transcribe/base64` | <500ms | Compact 17MB model, English, word timestamps |
-| **Whisper Pro** | `/v1/whisper/transcribe/base64` | <3s | 99 languages, speaker diarization |
-| **NLP Suite** | `/v1/nlp/{toxicity,sentiment,entities,pii,language}` | <50ms | CPU-only, ONNX, 5 endpoints |
-| **Image Processing** | `/v1/image/{remove-background,upscale,restore-face}/base64` | <3s | GPU (A10), BiRefNet + ESRGAN + GFPGAN |
-| **LLM Gateway** | `/v1/chat/completions` | varies | 113+ models, OpenAI-compatible, streaming |
+Authentication for the current API uses an `Authorization: Bearer YOUR_BRAINIALL_API_KEY` header. Never commit a real key.
 
-## Authentication
+For TTS examples for Claude, Cursor, VS Code, n8n, Postman and raw REST clients, use the maintained TTS repository linked above. It is the canonical source for current voices, prices and request schemas.
 
-Include ONE of these headers in every request:
+## Why this notice exists
 
-```
-Ocp-Apim-Subscription-Key: YOUR_KEY
-Authorization: Bearer YOUR_KEY
-api-key: YOUR_KEY
-```
-
-Get API keys at the [portal](https://app.brainiall.com) (GitHub sign-in, purchase credits, create key).
-
-## Quick Start
-
-### Python — LLM Gateway (OpenAI SDK)
-
-```python
-from openai import OpenAI
-
-client = OpenAI(
-    base_url="https://apim-ai-apis.azure-api.net/v1",
-    api_key="YOUR_KEY"
-)
-
-response = client.chat.completions.create(
-    model="claude-sonnet",
-    messages=[{"role": "user", "content": "Hello!"}]
-)
-print(response.choices[0].message.content)
-```
-
-### Python — Pronunciation Assessment
-
-```python
-import requests, base64
-
-audio_b64 = base64.b64encode(open("audio.wav", "rb").read()).decode()
-r = requests.post(
-    "https://apim-ai-apis.azure-api.net/v1/pronunciation/assess/base64",
-    headers={"Ocp-Apim-Subscription-Key": "YOUR_KEY"},
-    json={"audio": audio_b64, "text": "Hello world", "format": "wav"}
-)
-print(r.json()["overallScore"])  # 0-100
-```
-
-### Python — NLP Pipeline
-
-```python
-import requests
-
-headers = {"Ocp-Apim-Subscription-Key": "YOUR_KEY"}
-base = "https://apim-ai-apis.azure-api.net/v1/nlp"
-
-# Sentiment
-r = requests.post(f"{base}/sentiment", headers=headers, json={"text": "I love this!"})
-print(r.json())  # {"label": "positive", "score": 0.9987}
-
-# PII detection with redaction
-r = requests.post(f"{base}/pii", headers=headers, json={"text": "Email john@acme.com", "redact": True})
-print(r.json()["redacted_text"])  # "Email [EMAIL]"
-```
-
-### Node.js — LLM Gateway
-
-```javascript
-import OpenAI from "openai";
-
-const client = new OpenAI({
-  baseURL: "https://apim-ai-apis.azure-api.net/v1",
-  apiKey: "YOUR_KEY"
-});
-
-const res = await client.chat.completions.create({
-  model: "claude-sonnet",
-  messages: [{ role: "user", content: "Hello!" }]
-});
-console.log(res.choices[0].message.content);
-```
-
-### curl — Image Background Removal
-
-```bash
-curl -X POST https://apim-ai-apis.azure-api.net/v1/image/remove-background/base64 \
-  -H "Ocp-Apim-Subscription-Key: YOUR_KEY" \
-  -H "Content-Type: application/json" \
-  -d "{\"image\": \"$(base64 -i photo.jpg)\"}"
-```
-
-## LLM Gateway — Popular Models
-
-| Model | Alias | Price ($/MTok in/out) |
-|-------|-------|----------------------|
-| Claude Opus 4.6 | `claude-opus` | $5 / $25 |
-| Claude Sonnet 4.6 | `claude-sonnet` | $3 / $15 |
-| Claude Haiku 4.5 | `claude-haiku` | $1 / $5 |
-| DeepSeek R1 | `deepseek-r1` | $1.35 / $5.40 |
-| DeepSeek V3 | `deepseek-v3` | $0.27 / $1.10 |
-| Llama 3.3 70B | `llama-3.3-70b` | $0.72 / $0.72 |
-| Amazon Nova Pro | `nova-pro` | $0.80 / $3.20 |
-| Amazon Nova Micro | `nova-micro` | $0.035 / $0.14 |
-| Mistral Large 3 | `mistral-large-3` | $2 / $6 |
-| Qwen3 32B | `qwen3-32b` | $0.35 / $0.35 |
-
-Full list: `GET /v1/models` (113+ models from 17 providers).
-
-Supports: streaming SSE, tool calling, structured output (`json_object`/`json_schema`), extended thinking.
-
-Works with: OpenAI SDK, LiteLLM, LangChain, Cline, Cursor, Aider, Continue, SillyTavern, Open WebUI.
-
-## MCP Servers (for AI Agents)
-
-3 MCP servers with 20 tools total. Streamable HTTP transport.
-
-| Server | URL | Tools |
-|--------|-----|-------|
-| **Speech AI** | `https://apim-ai-apis.azure-api.net/mcp/pronunciation/mcp` | 10 tools + 8 resources + 3 prompts |
-| **NLP Tools** | `https://apim-ai-apis.azure-api.net/mcp/nlp/mcp` | 6 tools + 3 resources + 3 prompts |
-| **Image Tools** | `https://apim-ai-apis.azure-api.net/mcp/image/mcp` | 4 tools + 3 resources + 2 prompts |
-
-### MCP Configuration (Claude Desktop / Cursor / Cline)
-
-```json
-{
-  "mcpServers": {
-    "brainiall-speech": {
-      "url": "https://apim-ai-apis.azure-api.net/mcp/pronunciation/mcp",
-      "headers": { "Ocp-Apim-Subscription-Key": "YOUR_KEY" }
-    },
-    "brainiall-nlp": {
-      "url": "https://apim-ai-apis.azure-api.net/mcp/nlp/mcp",
-      "headers": { "Ocp-Apim-Subscription-Key": "YOUR_KEY" }
-    },
-    "brainiall-image": {
-      "url": "https://apim-ai-apis.azure-api.net/mcp/image/mcp",
-      "headers": { "Ocp-Apim-Subscription-Key": "YOUR_KEY" }
-    }
-  }
-}
-```
-
-Also available on: [Smithery](https://smithery.ai/server/fabiosuizu/pronunciation-assessment) (score 95/100) | [MCPize](https://mcpize.com/mcp/pronunciation-assessment) | [Apify](https://apify.com/vivid_astronaut/pronunciation-assessment-mcp) ($0.02/call) | [MCP Registry](https://registry.modelcontextprotocol.io)
-
-## Examples
-
-| File | Description |
-|------|-------------|
-| [`python/basic_usage.py`](python/basic_usage.py) | Speech APIs — assess, transcribe, synthesize |
-| [`python/pronunciation_tutor.py`](python/pronunciation_tutor.py) | Interactive pronunciation tutor |
-| [`javascript/basic_usage.js`](javascript/basic_usage.js) | Node.js examples for speech APIs |
-| [`curl/examples.sh`](curl/examples.sh) | curl commands for every endpoint |
-| [`mcp/claude-desktop-config.json`](mcp/claude-desktop-config.json) | MCP config for Claude Desktop |
-| [`mcp/cursor-config.json`](mcp/cursor-config.json) | MCP config for Cursor IDE |
-| [`llms-full.txt`](llms-full.txt) | Complete API reference for LLM consumption |
-
-## Pricing
-
-| Product | Price | Unit |
-|---------|-------|------|
-| Pronunciation | $0.02 | per call |
-| TTS | $0.01-0.03 | per 1K chars |
-| STT (compact) | $0.01 | per request |
-| Whisper Pro | $0.02 | per minute |
-| NLP (any) | $0.001-0.002 | per call |
-| Image (any) | $0.003-0.005 | per image |
-| LLM Gateway | competitive pricing | per MTok |
-
-Credit packages: $5, $10, $25, $50, $100. [Portal](https://app.brainiall.com/pricing) | [Azure Marketplace](https://azuremarketplace.microsoft.com) (search "Brainiall").
+External directories and search engines may still link to this repository. This notice prevents an old listing from sending developers to endpoints that no longer work and points them to the maintained production surfaces.
 
 ## License
 
