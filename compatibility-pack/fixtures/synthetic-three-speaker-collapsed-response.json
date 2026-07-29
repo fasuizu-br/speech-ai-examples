@@ -1,0 +1,318 @@
+{
+  "audioDurationMs": 22100,
+  "text": "Bom dia, vamos iniciar a reunião de teste. Eu cuido do cronograma e das próximas etapas. Eu vou revisar o orçamento e os riscos. A primeira decisão é confirmar o prazo. A segunda decisão é preparar o relatório. Concordo, encerramos este áudio sintético.",
+  "speakers": {
+    "count": 2,
+    "labels": [
+      "SPEAKER_00",
+      "SPEAKER_01"
+    ]
+  },
+  "words": [
+    {
+      "word": "Bom",
+      "start": 0.0,
+      "end": 0.2,
+      "confidence": 0.995,
+      "speaker": "SPEAKER_00"
+    },
+    {
+      "word": "dia,",
+      "start": 0.2,
+      "end": 0.46,
+      "confidence": 1.0,
+      "speaker": "SPEAKER_00"
+    },
+    {
+      "word": "vamos",
+      "start": 0.68,
+      "end": 1.14,
+      "confidence": 1.0,
+      "speaker": "SPEAKER_00"
+    },
+    {
+      "word": "iniciar",
+      "start": 1.14,
+      "end": 1.72,
+      "confidence": 1.0,
+      "speaker": "SPEAKER_00"
+    },
+    {
+      "word": "a",
+      "start": 1.72,
+      "end": 1.82,
+      "confidence": 1.0,
+      "speaker": "SPEAKER_00"
+    },
+    {
+      "word": "reunião",
+      "start": 1.82,
+      "end": 2.28,
+      "confidence": 1.0,
+      "speaker": "SPEAKER_00"
+    },
+    {
+      "word": "de",
+      "start": 2.28,
+      "end": 2.5,
+      "confidence": 0.981,
+      "speaker": "SPEAKER_00"
+    },
+    {
+      "word": "teste.",
+      "start": 2.5,
+      "end": 3.0,
+      "confidence": 0.997,
+      "speaker": "SPEAKER_00"
+    },
+    {
+      "word": "Eu",
+      "start": 3.52,
+      "end": 4.06,
+      "confidence": 0.999,
+      "speaker": "SPEAKER_01"
+    },
+    {
+      "word": "cuido",
+      "start": 4.06,
+      "end": 4.46,
+      "confidence": 0.999,
+      "speaker": "SPEAKER_01"
+    },
+    {
+      "word": "do",
+      "start": 4.46,
+      "end": 4.62,
+      "confidence": 1.0,
+      "speaker": "SPEAKER_01"
+    },
+    {
+      "word": "cronograma",
+      "start": 4.62,
+      "end": 5.32,
+      "confidence": 1.0,
+      "speaker": "SPEAKER_01"
+    },
+    {
+      "word": "e",
+      "start": 5.32,
+      "end": 5.4,
+      "confidence": 1.0,
+      "speaker": "SPEAKER_01"
+    },
+    {
+      "word": "das",
+      "start": 5.4,
+      "end": 5.56,
+      "confidence": 1.0,
+      "speaker": "SPEAKER_01"
+    },
+    {
+      "word": "próximas",
+      "start": 5.56,
+      "end": 6.22,
+      "confidence": 1.0,
+      "speaker": "SPEAKER_01"
+    },
+    {
+      "word": "etapas.",
+      "start": 6.22,
+      "end": 6.82,
+      "confidence": 1.0,
+      "speaker": "SPEAKER_01"
+    },
+    {
+      "word": "Eu",
+      "start": 7.49,
+      "end": 8.13,
+      "confidence": 0.999,
+      "speaker": "SPEAKER_01"
+    },
+    {
+      "word": "vou",
+      "start": 8.13,
+      "end": 8.33,
+      "confidence": 1.0,
+      "speaker": "SPEAKER_01"
+    },
+    {
+      "word": "revisar",
+      "start": 8.33,
+      "end": 8.85,
+      "confidence": 0.999,
+      "speaker": "SPEAKER_01"
+    },
+    {
+      "word": "o",
+      "start": 8.85,
+      "end": 8.99,
+      "confidence": 0.922,
+      "speaker": "SPEAKER_01"
+    },
+    {
+      "word": "orçamento",
+      "start": 8.99,
+      "end": 9.47,
+      "confidence": 1.0,
+      "speaker": "SPEAKER_01"
+    },
+    {
+      "word": "e",
+      "start": 9.47,
+      "end": 9.69,
+      "confidence": 1.0,
+      "speaker": "SPEAKER_01"
+    },
+    {
+      "word": "os",
+      "start": 9.69,
+      "end": 9.85,
+      "confidence": 1.0,
+      "speaker": "SPEAKER_01"
+    },
+    {
+      "word": "riscos.",
+      "start": 9.85,
+      "end": 10.29,
+      "confidence": 0.998,
+      "speaker": "SPEAKER_01"
+    },
+    {
+      "word": "A",
+      "start": 11.14,
+      "end": 11.68,
+      "confidence": 1.0,
+      "speaker": "SPEAKER_00"
+    },
+    {
+      "word": "primeira",
+      "start": 11.68,
+      "end": 12.08,
+      "confidence": 0.999,
+      "speaker": "SPEAKER_00"
+    },
+    {
+      "word": "decisão",
+      "start": 12.08,
+      "end": 12.72,
+      "confidence": 1.0,
+      "speaker": "SPEAKER_00"
+    },
+    {
+      "word": "é",
+      "start": 12.72,
+      "end": 12.9,
+      "confidence": 0.999,
+      "speaker": "SPEAKER_00"
+    },
+    {
+      "word": "confirmar",
+      "start": 12.9,
+      "end": 13.52,
+      "confidence": 1.0,
+      "speaker": "SPEAKER_00"
+    },
+    {
+      "word": "o",
+      "start": 13.52,
+      "end": 13.64,
+      "confidence": 1.0,
+      "speaker": "SPEAKER_00"
+    },
+    {
+      "word": "prazo.",
+      "start": 13.64,
+      "end": 14.1,
+      "confidence": 0.996,
+      "speaker": "SPEAKER_00"
+    },
+    {
+      "word": "A",
+      "start": 14.5,
+      "end": 15.02,
+      "confidence": 1.0,
+      "speaker": "SPEAKER_01"
+    },
+    {
+      "word": "segunda",
+      "start": 15.02,
+      "end": 15.32,
+      "confidence": 0.999,
+      "speaker": "SPEAKER_01"
+    },
+    {
+      "word": "decisão",
+      "start": 15.32,
+      "end": 15.98,
+      "confidence": 1.0,
+      "speaker": "SPEAKER_01"
+    },
+    {
+      "word": "é",
+      "start": 15.98,
+      "end": 16.14,
+      "confidence": 1.0,
+      "speaker": "SPEAKER_01"
+    },
+    {
+      "word": "preparar",
+      "start": 16.14,
+      "end": 16.66,
+      "confidence": 1.0,
+      "speaker": "SPEAKER_01"
+    },
+    {
+      "word": "o",
+      "start": 16.66,
+      "end": 16.74,
+      "confidence": 0.998,
+      "speaker": "SPEAKER_01"
+    },
+    {
+      "word": "relatório.",
+      "start": 16.74,
+      "end": 17.34,
+      "confidence": 1.0,
+      "speaker": "SPEAKER_01"
+    },
+    {
+      "word": "Concordo,",
+      "start": 18.49,
+      "end": 19.11,
+      "confidence": 0.978,
+      "speaker": "SPEAKER_01"
+    },
+    {
+      "word": "encerramos",
+      "start": 19.37,
+      "end": 19.97,
+      "confidence": 0.999,
+      "speaker": "SPEAKER_01"
+    },
+    {
+      "word": "este",
+      "start": 19.97,
+      "end": 20.33,
+      "confidence": 0.999,
+      "speaker": "SPEAKER_01"
+    },
+    {
+      "word": "áudio",
+      "start": 20.33,
+      "end": 20.83,
+      "confidence": 0.951,
+      "speaker": "SPEAKER_01"
+    },
+    {
+      "word": "sintético.",
+      "start": 20.83,
+      "end": 21.49,
+      "confidence": 0.999,
+      "speaker": "SPEAKER_01"
+    }
+  ],
+  "metadata": {
+    "language": "pt",
+    "modelVersion": "1.0.0"
+  }
+}

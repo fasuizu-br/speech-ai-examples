@@ -22,11 +22,13 @@ Authentication for the current API uses an `Authorization: Bearer YOUR_BRAINIALL
 
 For TTS examples for Claude, Cursor, VS Code, n8n, Postman and raw REST clients, use the maintained TTS repository linked above. It is the canonical source for current voices, prices and request schemas.
 
-The small compatibility pack is different from the historical examples: it is
-an offline-only contract test for a buffered TTS request and diarized STT output.
-It performs no API call, contains no key, and does not claim streaming,
-cancellation, OpenAI drop-in compatibility, or support for a third-party
-project. Read its kill gates before reusing it.
+The small compatibility pack is different from the historical examples. It is
+an offline-only contract test for buffered TTS, generic diarized-STT review
+artifacts, a synthetic diarization canary and local-by-default usage planning.
+It performs no API call during tests, contains no key, copies no third-party
+source, and does not claim streaming, cancellation, OpenAI drop-in
+compatibility, completed third-party integration or billing. Read its kill
+gates before reusing it.
 
 ## Why this notice exists
 

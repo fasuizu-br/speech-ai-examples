@@ -1,0 +1,38 @@
+[
+  {
+    "start": 0,
+    "end": 3.592,
+    "speaker": "VOICE_A",
+    "text": "Bom dia, vamos iniciar a reunião de teste."
+  },
+  {
+    "start": 3.592,
+    "end": 7.650563,
+    "speaker": "VOICE_B",
+    "text": "Eu cuido do cronograma e das próximas etapas."
+  },
+  {
+    "start": 7.650563,
+    "end": 11.229126,
+    "speaker": "VOICE_C",
+    "text": "Eu vou revisar o orçamento e os riscos."
+  },
+  {
+    "start": 11.229126,
+    "end": 14.577189,
+    "speaker": "VOICE_A",
+    "text": "A primeira decisão é confirmar o prazo."
+  },
+  {
+    "start": 14.577189,
+    "end": 18.235752,
+    "speaker": "VOICE_B",
+    "text": "A segunda decisão é preparar o relatório."
+  },
+  {
+    "start": 18.235752,
+    "end": 22.098563,
+    "speaker": "VOICE_C",
+    "text": "Concordo, encerramos este áudio sintético."
+  }
+]

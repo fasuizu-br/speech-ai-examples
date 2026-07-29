@@ -1,0 +1,38 @@
+[
+  {
+    "start": 0,
+    "end": 4.157438,
+    "speaker": "VOICE_A",
+    "text": "Bom dia. Hoje vamos testar a separação de vozes."
+  },
+  {
+    "start": 4.157438,
+    "end": 8.654063,
+    "speaker": "VOICE_B",
+    "text": "Perfeito. A primeira pergunta é sobre qualidade."
+  },
+  {
+    "start": 8.654063,
+    "end": 12.645063,
+    "speaker": "VOICE_A",
+    "text": "A resposta deve preservar quem falou cada frase."
+  },
+  {
+    "start": 12.645063,
+    "end": 16.565876,
+    "speaker": "VOICE_B",
+    "text": "Também precisamos de horários de início e fim."
+  },
+  {
+    "start": 16.565876,
+    "end": 20.359126,
+    "speaker": "VOICE_A",
+    "text": "Se os rótulos mudarem, o teste deve falhar."
+  },
+  {
+    "start": 20.359126,
+    "end": 24.619938,
+    "speaker": "VOICE_B",
+    "text": "Concordo. Este áudio é totalmente sintético."
+  }
+]

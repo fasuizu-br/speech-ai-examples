@@ -1,0 +1,346 @@
+{
+  "audioDurationMs": 24620,
+  "text": "Bom dia. Hoje vamos testar a separação de vozes. Perfeito. A primeira pergunta é sobre qualidade. A resposta deve preservar quem e falou cada frase. Também precisamos de horários de início e fim. Se os rótulos mudarem, o teste deve falhar. Concordo. Este áudio é totalmente sintético.",
+  "speakers": {
+    "count": 2,
+    "labels": [
+      "SPEAKER_00",
+      "SPEAKER_01"
+    ]
+  },
+  "words": [
+    {
+      "word": "Bom",
+      "start": 0.0,
+      "end": 0.22,
+      "confidence": 0.989,
+      "speaker": "SPEAKER_00"
+    },
+    {
+      "word": "dia.",
+      "start": 0.22,
+      "end": 0.46,
+      "confidence": 1.0,
+      "speaker": "SPEAKER_00"
+    },
+    {
+      "word": "Hoje",
+      "start": 0.74,
+      "end": 1.1,
+      "confidence": 0.999,
+      "speaker": "SPEAKER_00"
+    },
+    {
+      "word": "vamos",
+      "start": 1.1,
+      "end": 1.48,
+      "confidence": 1.0,
+      "speaker": "SPEAKER_00"
+    },
+    {
+      "word": "testar",
+      "start": 1.48,
+      "end": 2.06,
+      "confidence": 1.0,
+      "speaker": "SPEAKER_00"
+    },
+    {
+      "word": "a",
+      "start": 2.06,
+      "end": 2.18,
+      "confidence": 1.0,
+      "speaker": "SPEAKER_00"
+    },
+    {
+      "word": "separação",
+      "start": 2.18,
+      "end": 2.84,
+      "confidence": 1.0,
+      "speaker": "SPEAKER_00"
+    },
+    {
+      "word": "de",
+      "start": 2.84,
+      "end": 3.08,
+      "confidence": 0.996,
+      "speaker": "SPEAKER_00"
+    },
+    {
+      "word": "vozes.",
+      "start": 3.08,
+      "end": 3.68,
+      "confidence": 0.999,
+      "speaker": "SPEAKER_00"
+    },
+    {
+      "word": "Perfeito.",
+      "start": 4.34,
+      "end": 4.94,
+      "confidence": 0.998,
+      "speaker": "SPEAKER_01"
+    },
+    {
+      "word": "A",
+      "start": 5.34,
+      "end": 5.62,
+      "confidence": 1.0,
+      "speaker": "SPEAKER_01"
+    },
+    {
+      "word": "primeira",
+      "start": 5.62,
+      "end": 5.98,
+      "confidence": 1.0,
+      "speaker": "SPEAKER_01"
+    },
+    {
+      "word": "pergunta",
+      "start": 5.98,
+      "end": 6.5,
+      "confidence": 1.0,
+      "speaker": "SPEAKER_01"
+    },
+    {
+      "word": "é",
+      "start": 6.5,
+      "end": 6.74,
+      "confidence": 1.0,
+      "speaker": "SPEAKER_01"
+    },
+    {
+      "word": "sobre",
+      "start": 6.74,
+      "end": 7.04,
+      "confidence": 1.0,
+      "speaker": "SPEAKER_01"
+    },
+    {
+      "word": "qualidade.",
+      "start": 7.04,
+      "end": 7.5,
+      "confidence": 0.999,
+      "speaker": "SPEAKER_01"
+    },
+    {
+      "word": "A",
+      "start": 8.56,
+      "end": 9.04,
+      "confidence": 0.992,
+      "speaker": "SPEAKER_00"
+    },
+    {
+      "word": "resposta",
+      "start": 9.04,
+      "end": 9.6,
+      "confidence": 1.0,
+      "speaker": "SPEAKER_00"
+    },
+    {
+      "word": "deve",
+      "start": 9.6,
+      "end": 10.0,
+      "confidence": 1.0,
+      "speaker": "SPEAKER_00"
+    },
+    {
+      "word": "preservar",
+      "start": 10.0,
+      "end": 10.72,
+      "confidence": 1.0,
+      "speaker": "SPEAKER_00"
+    },
+    {
+      "word": "quem",
+      "start": 10.72,
+      "end": 10.92,
+      "confidence": 0.998,
+      "speaker": "SPEAKER_00"
+    },
+    {
+      "word": "e",
+      "start": 10.92,
+      "end": 11.06,
+      "confidence": 0.513,
+      "speaker": "SPEAKER_00"
+    },
+    {
+      "word": "falou",
+      "start": 11.06,
+      "end": 11.36,
+      "confidence": 0.99,
+      "speaker": "SPEAKER_00"
+    },
+    {
+      "word": "cada",
+      "start": 11.36,
+      "end": 11.66,
+      "confidence": 1.0,
+      "speaker": "SPEAKER_00"
+    },
+    {
+      "word": "frase.",
+      "start": 11.66,
+      "end": 12.18,
+      "confidence": 1.0,
+      "speaker": "SPEAKER_00"
+    },
+    {
+      "word": "Também",
+      "start": 12.86,
+      "end": 13.28,
+      "confidence": 0.999,
+      "speaker": "SPEAKER_01"
+    },
+    {
+      "word": "precisamos",
+      "start": 13.28,
+      "end": 14.04,
+      "confidence": 1.0,
+      "speaker": "SPEAKER_01"
+    },
+    {
+      "word": "de",
+      "start": 14.04,
+      "end": 14.26,
+      "confidence": 0.997,
+      "speaker": "SPEAKER_01"
+    },
+    {
+      "word": "horários",
+      "start": 14.26,
+      "end": 14.66,
+      "confidence": 0.998,
+      "speaker": "SPEAKER_01"
+    },
+    {
+      "word": "de",
+      "start": 14.66,
+      "end": 14.9,
+      "confidence": 1.0,
+      "speaker": "SPEAKER_01"
+    },
+    {
+      "word": "início",
+      "start": 14.9,
+      "end": 15.24,
+      "confidence": 0.998,
+      "speaker": "SPEAKER_01"
+    },
+    {
+      "word": "e",
+      "start": 15.24,
+      "end": 15.48,
+      "confidence": 1.0,
+      "speaker": "SPEAKER_01"
+    },
+    {
+      "word": "fim.",
+      "start": 15.48,
+      "end": 15.72,
+      "confidence": 1.0,
+      "speaker": "SPEAKER_01"
+    },
+    {
+      "word": "Se",
+      "start": 16.48,
+      "end": 17.04,
+      "confidence": 0.998,
+      "speaker": "SPEAKER_00"
+    },
+    {
+      "word": "os",
+      "start": 17.04,
+      "end": 17.24,
+      "confidence": 1.0,
+      "speaker": "SPEAKER_00"
+    },
+    {
+      "word": "rótulos",
+      "start": 17.24,
+      "end": 17.74,
+      "confidence": 0.999,
+      "speaker": "SPEAKER_00"
+    },
+    {
+      "word": "mudarem,",
+      "start": 17.74,
+      "end": 18.28,
+      "confidence": 0.999,
+      "speaker": "SPEAKER_00"
+    },
+    {
+      "word": "o",
+      "start": 18.5,
+      "end": 18.74,
+      "confidence": 0.992,
+      "speaker": "SPEAKER_00"
+    },
+    {
+      "word": "teste",
+      "start": 18.74,
+      "end": 19.08,
+      "confidence": 1.0,
+      "speaker": "SPEAKER_00"
+    },
+    {
+      "word": "deve",
+      "start": 19.08,
+      "end": 19.44,
+      "confidence": 1.0,
+      "speaker": "SPEAKER_00"
+    },
+    {
+      "word": "falhar.",
+      "start": 19.44,
+      "end": 20.0,
+      "confidence": 1.0,
+      "speaker": "SPEAKER_00"
+    },
+    {
+      "word": "Concordo.",
+      "start": 20.48,
+      "end": 21.2,
+      "confidence": 0.997,
+      "speaker": "SPEAKER_01"
+    },
+    {
+      "word": "Este",
+      "start": 21.58,
+      "end": 21.98,
+      "confidence": 0.999,
+      "speaker": "SPEAKER_01"
+    },
+    {
+      "word": "áudio",
+      "start": 21.98,
+      "end": 22.5,
+      "confidence": 0.998,
+      "speaker": "SPEAKER_01"
+    },
+    {
+      "word": "é",
+      "start": 22.5,
+      "end": 22.64,
+      "confidence": 1.0,
+      "speaker": "SPEAKER_01"
+    },
+    {
+      "word": "totalmente",
+      "start": 22.64,
+      "end": 23.1,
+      "confidence": 0.998,
+      "speaker": "SPEAKER_01"
+    },
+    {
+      "word": "sintético.",
+      "start": 23.1,
+      "end": 24.02,
+      "confidence": 1.0,
+      "speaker": "SPEAKER_01"
+    }
+  ],
+  "metadata": {
+    "language": "pt",
+    "modelVersion": "1.0.0"
+  }
+}
