@@ -1,0 +1,20 @@
+name: Offline compatibility pack
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+      - name: Run dependency-free contract tests
+        working-directory: compatibility-pack
+        run: npm test

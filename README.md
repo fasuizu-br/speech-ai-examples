@@ -16,10 +16,17 @@
 | Brazilian Portuguese transcription | [Transcreve BR](https://www.brainiall.com/transcreve?utm_source=github&utm_medium=legacy_repo&utm_campaign=speech_ai_migration) |
 | Speech-to-text API overview | [Brainiall Speech-to-Text](https://www.brainiall.com/apis/speech-to-text?utm_source=github&utm_medium=legacy_repo&utm_campaign=speech_ai_migration) |
 | Account and API key | [Brainiall app](https://app.brainiall.com?utm_source=github&utm_medium=legacy_repo&utm_campaign=speech_ai_migration) |
+| Offline contract compatibility checks | [`compatibility-pack/`](compatibility-pack/) |
 
 Authentication for the current API uses an `Authorization: Bearer YOUR_BRAINIALL_API_KEY` header. Never commit a real key.
 
 For TTS examples for Claude, Cursor, VS Code, n8n, Postman and raw REST clients, use the maintained TTS repository linked above. It is the canonical source for current voices, prices and request schemas.
+
+The small compatibility pack is different from the historical examples: it is
+an offline-only contract test for a buffered TTS request and diarized STT output.
+It performs no API call, contains no key, and does not claim streaming,
+cancellation, OpenAI drop-in compatibility, or support for a third-party
+project. Read its kill gates before reusing it.
 
 ## Why this notice exists
 

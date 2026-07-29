@@ -1,0 +1,53 @@
+{
+  "text": "Bom dia, equipe. Vamos começar? Sim.",
+  "words": [
+    {
+      "word": "Bom",
+      "start": 0.1,
+      "end": 0.3,
+      "confidence": 0.99,
+      "speaker": "SPEAKER_00"
+    },
+    {
+      "word": "dia,",
+      "start": 0.32,
+      "end": 0.55,
+      "confidence": 0.98,
+      "speaker": "SPEAKER_00"
+    },
+    {
+      "word": "equipe.",
+      "start": 0.6,
+      "end": 1,
+      "confidence": 0.97,
+      "speaker": "SPEAKER_00"
+    },
+    {
+      "word": "Vamos",
+      "start": 1.5,
+      "end": 1.8,
+      "confidence": 0.98,
+      "speaker": "SPEAKER_01"
+    },
+    {
+      "word": "começar?",
+      "start": 1.85,
+      "end": 2.3,
+      "confidence": 0.97,
+      "speaker": "SPEAKER_01"
+    },
+    {
+      "word": "Sim.",
+      "start": 2.9,
+      "end": 3.2,
+      "confidence": 0.99,
+      "speaker": "SPEAKER_00"
+    }
+  ],
+  "metadata": {
+    "language": "pt",
+    "languageProbability": 0.99,
+    "processingTimeMs": 42,
+    "fixture": "synthetic"
+  }
+}
