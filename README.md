@@ -37,3 +37,7 @@ External directories and search engines may still link to this repository. This 
 ## License
 
 [MIT](LICENSE) — Brainiall
+
+## C112 — hosted STT contract fixture
+
+The [Whisper-WebUI OpenAI-compatible fixture](examples/whisper-webui-openai-compatible.md) is a provider-neutral, synthetic request/response example for maintainers evaluating an external speech-to-text path. It does not claim that Whisper-WebUI has adopted the contract, and it never includes a key or private audio.
